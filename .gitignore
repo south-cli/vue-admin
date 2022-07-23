@@ -1,11 +1,8 @@
-.DS_Store
 node_modules
-/dist
-
-
-# local env files
-.env.local
-.env.*.local
+.DS_Store
+dist
+dist-ssr
+*.local
 
 # Log files
 npm-debug.log*
@@ -13,11 +10,21 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea
-.vscode
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# e2e测试
+/cypress/videos/
+/cypress/screenshots/
+
+# 测试覆盖率
+/coverage/
+
+stats.html

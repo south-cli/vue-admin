@@ -1,22 +1,40 @@
-import { createApp, App } from 'vue'
-import 'xe-utils'
-import VXETable from 'vxe-table'
-import Page from './App.vue'
-import './registerServiceWorker'
-import router from './router'
-import store from './store'
-// import 'normalize.css'
-import 'element-plus/dist/index.css'
-import 'vxe-table/lib/style.css'
+import { createApp } from 'vue'
+import type { App } from 'vue'
+import { createPinia } from 'pinia'
+import { router } from './router'
+import { routerIntercept } from './router/intercept'
+import Element from './App.vue'
+
+// 样式
+import 'uno.css'
+import 'nprogress/nprogress.css'
+import '@/assets/css/scrollbar.less'
+
+// iconify
+import '@purge-icons/generated'
+
+// vxe-table
+import { Column, Table, Grid } from 'vxe-table'
+import 'vxe-table/es/style.min.css'
+import './assets/css/vxeTable.less'
 
 function useTable (app: App) {
-  app.use(VXETable)
-
-  // 给 vue 实例挂载内部对象，例如：
-  // app.config.globalProperties.$XModal = VXETable.modal
-  // app.config.globalProperties.$XPrint = VXETable.print
-  // app.config.globalProperties.$XSaveFile = VXETable.saveFile
-  // app.config.globalProperties.$XReadFile = VXETable.readFile
+  // 表格功能
+  app
+  // 可选组件
+  .use(Column)
+  // 安装表格
+  .use(Table)
+  .use(Grid)
 }
 
-createApp(Page).use(useTable).use(store).use(router).mount('#app')
+const app = createApp(Element)
+app
+  .use(router)
+  .use(useTable)
+  .use(createPinia())
+
+// 路由拦截处理
+routerIntercept(router)
+
+app.mount('#app')
