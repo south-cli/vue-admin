@@ -27,8 +27,8 @@ export const TIME_FORMAT = 'YYYY-MM-DD hh:mm:ss'
  * 来源
  */
  export const SOURCE_TYPE: IConstant[] = [
-  { value: '1', label: '新SDK' },
-  { value: '0', label: '旧SDK' }
+  { value: '43', label: '新SDK' },
+  { value: '67', label: '旧SDK' }
 ]
 
 /**
