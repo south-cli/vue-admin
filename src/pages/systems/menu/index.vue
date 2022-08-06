@@ -43,7 +43,7 @@
   </BasicContent>
 
   <BasicModal
-    v-model:visible="creates.isVisible"
+    v-model:visible="creates.visible"
     :loading="createLoading"
     :title="creates.title"
     @handleFinish="createSubmit"
@@ -60,12 +60,12 @@
 </template>
 
 <script lang="ts">
-import type { IFormData } from '@/types/form'
+import type { IFormData } from '#/form'
 import type { IBasicForm } from '@/components/Form/model'
-import type { ICreateData, ISearchData, ITableData, IPaginationData } from '@/types/global'
+import type { ICreateData, ISearchData, ITableData, IPaginationData } from '#/global'
 import { message } from 'ant-design-vue'
 import { defineComponent, onMounted, reactive, ref } from 'vue'
-import { getMenuPage, getMenuById, createMenu, updateMenu, deleteMenu } from '@/servers/systems/menu'
+import { getSystemMenuPage, getSystemMenuById, createSystemMenu, updateSystemMenu, deleteSystemMenu } from '@/servers/systems/menu'
 import { UpdateBtn, DeleteBtn } from '@/components/Buttons'
 import { ADD_TITLE, EDIT_TITLE } from '@/utils/config'
 import { searchList, createList, tableColumns } from './data'
@@ -125,11 +125,11 @@ export default defineComponent({
     // 新增数据
     const creates = reactive<ICreateData>({
       id: '',
-      isVisible: false,
+      visible: false,
       title: '新增',
       data: initCreate
     })
-    
+
     // 表格数据
     const tables = reactive<ITableData>({
       total: 0,
@@ -167,7 +167,7 @@ export default defineComponent({
       const query = { ...pagination, ...values }
       try {
         startLoading()
-        const { data: { data } } = await getMenuPage(query)
+        const { data: { data } } = await getSystemMenuPage(query)
         const { items, total } = data
         tables.data = items
         tables.total = total
@@ -180,7 +180,7 @@ export default defineComponent({
 
     /** 点击新增 */
     const onCreate = () => {
-      creates.isVisible = !creates.isVisible
+      creates.visible = !creates.visible
       creates.title = ADD_TITLE
       creates.id = ''
       creates.data = initCreate
@@ -192,13 +192,13 @@ export default defineComponent({
      */
     const onUpdate = async (record: IFormData) => {
       const { id, name } = record
-      creates.isVisible = !creates.isVisible
+      creates.visible = !creates.visible
       creates.id = id as string
       creates.title = EDIT_TITLE(name as string)
 
       try {
         startCreateLoading()
-        const { data: { data } } = await getMenuById(id as string)
+        const { data: { data } } = await getSystemMenuById(id as string)
         creates.data = data
         endCreateLoading()
       } catch(err) {
@@ -214,13 +214,14 @@ export default defineComponent({
     const handleCreate = async (values: IFormData) => {
       try {
         startCreateLoading()
-        const functions = () => creates.id ? updateMenu(creates.id, values) : createMenu(values)
+        const functions = () => creates.id ? updateSystemMenu(creates.id, values) : createSystemMenu(values)
         const { data } = await functions()
-        if (data?.code === 200) {
-          getPage()
-          creates.isVisible = false
-          message.success(data?.message || '操作成功')
-        }
+        getPage()
+        creates.id = ''
+        creates.visible = false
+        creates.data = initCreate
+        createFormRef.value?.handleReset()
+        message.success(data?.message || '操作成功')
         endCreateLoading()
       } catch(err) {
         endCreateLoading()
@@ -230,7 +231,7 @@ export default defineComponent({
 
     /** 关闭新增/编辑 */
     const onCloseCreate = () => {
-      creates.isVisible = false
+      creates.visible = false
     }
 
     /**
@@ -240,7 +241,7 @@ export default defineComponent({
     const handleDelete = async (id: string | number) => {
       try {
         startLoading()
-        const { data } = await deleteMenu(id as string)
+        const { data } = await deleteSystemMenu(id as string)
         if (data?.code === 200) {
           message.success(data?.message || '删除成功')
           getPage()
@@ -275,11 +276,11 @@ export default defineComponent({
       tableColumns,
       pagePermission,
       createList,
+      handleSearch,
       onCreate,
       onUpdate,
       createSubmit,
       onCloseCreate,
-      handleSearch,
       handleCreate,
       handleDelete,
       handlePagination

@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => {
     plugins: createVitePlugins(),
     resolve: {
       alias: {
-        '@': '/src'
+        '@': '/src',
+        '#': '/types'
       }
     },
     define: {
@@ -26,6 +27,10 @@ export default defineConfig(({ mode }) => {
       open: true,
       // 跨域处理
       proxy: createProxy(viteEnv.VITE_PROXY)
+    },
+    test: {
+      environment: 'jsdom',
+      setupFiles: './tests/index.ts'
     },
     css: {
       preprocessorOptions: {

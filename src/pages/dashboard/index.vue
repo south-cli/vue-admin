@@ -13,26 +13,24 @@
     </template>
 
     <Spin :spinning="loading">
-      <Line :items="datum.items" />
-      <Pie :data="datum.game_data" />
-      <Descriptions :data="datum.rows" />
+      内容。。。
     </Spin>
   </BasicContent>
 </template>
 
 <script lang="ts">
 import type { IDashboardResult } from './model'
-import type { ISearchData } from '@/types/global'
+import type { ISearchData } from '#/global'
 import { defineComponent, onMounted, reactive, ref } from 'vue'
 import { useLoading } from '@/hooks/useLoading'
-import { IFormData } from '@/types/form'
+import { IFormData } from '#/form'
 import { getDataTrends } from '@/servers/dashboard'
 import { DATE_FORMAT } from '@/utils/constants'
 import { searchList } from './data'
 import { Spin } from 'ant-design-vue'
-import Pie from './components/Pie.vue'
-import Line from './components/Line.vue'
-import Descriptions from './components/Descriptions.vue'
+// import Pie from './components/Pie.vue'
+// import Line from './components/Line.vue'
+// import Descriptions from './components/Descriptions.vue'
 import dayjs from 'dayjs'
 import BasicSearch from '@/components/Search/BasicSearch.vue'
 import BasicContent from '@/components/Content/BasicContent.vue'
@@ -40,10 +38,7 @@ import BasicContent from '@/components/Content/BasicContent.vue'
 export default defineComponent({
   name: 'DashboardPage',
   components: {
-    Pie,
-    Line,
     Spin,
-    Descriptions,
     BasicSearch,
     BasicContent
   },

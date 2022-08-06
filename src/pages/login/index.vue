@@ -22,7 +22,13 @@
           name="username"
           :rules="[{ required: true, message: '请输入用户名' }]"
         >
-          <Input v-model:value="formState.username" placeholder="用户名" autoComplete="username">
+          <Input
+            v-model:value="formState.username"
+            :allow-clear="true"
+            placeholder="用户名"
+            data-test="username"
+            auto-complete="username"
+          >
             <template #prefix>
               <UserOutlined class="site-form-item-icon" />
             </template>
@@ -36,8 +42,13 @@
             PASSWORD_RULE
           ]"
         >
-          <InputPassword v-model:value="formState.password" autoComplete="current-password">
-            <template #prefix>
+          <InputPassword
+            v-model:value="formState.password"
+            :allow-clear="true"
+            data-test="password"
+            auto-complete="current-password"
+          >
+           <template #prefix>
               <LockOutlined class="site-form-item-icon" />
             </template>
           </InputPassword>
@@ -72,9 +83,9 @@ import { useLoading } from '@/hooks/useLoading'
 import { useToken } from '@/hooks/useToken'
 import { useMenuStore } from '@/stores/menu'
 import { useTabStore } from '@/stores/tabs'
+import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
 import { useWatermark } from '@/hooks/useWatermark'
 import { permissionsToArray } from '@/utils/permissions'
 import { menus } from '@/menus'
@@ -103,27 +114,17 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter()
-    const menuStore = useMenuStore()
-    const tabStore = useTabStore()
     const { loading, startLoading, endLoading } = useLoading()
-    const { setUserInfo, setPermissions } = useUserStore()
     const { setToken } = useToken()
-    const { openKeys, menuList } = storeToRefs(menuStore)
     const { RemoveWatermark } = useWatermark()
-
     const isLock = ref(false)
 
     const formState = reactive<ILoginData>({
-      username: '',
-      password: '',
+      username: 'admin',
+      password: 'admin123456',
     })
 
     onMounted(() => {
-      // 关闭loading
-      if (document?.getElementById('first')) {
-        (document.getElementById('first') as HTMLElement).style.display = 'none'
-      }
-
       // 清除水印
       RemoveWatermark()
     })
@@ -135,6 +136,10 @@ export default defineComponent({
     const handleFinish: FormProps['onFinish'] = async (values: ILoginData) => {
       try {
         startLoading()
+        const menuStore = useMenuStore()
+        const tabStore = useTabStore()
+        const { openKeys, menuList } = storeToRefs(menuStore)
+        const { setUserInfo, setPermissions } = useUserStore()
         const { data } = await login(values)
         const { data: { token, user, permissions } } = data
         const newPermissions = permissionsToArray(permissions)
@@ -153,9 +158,10 @@ export default defineComponent({
         if (top) openKeys.value = [top]
         if (key) tabStore.addTabs({ key, path, title })
         isLock.value = true
-        router.push(path)
+        router.push(path || '/')
         endLoading()
       } catch(err) {
+        console.log('登录失败:', err)
         isLock.value = false
         endLoading()
       }

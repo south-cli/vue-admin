@@ -11,14 +11,17 @@
     "esModuleInterop": true,
     "noUnusedLocals": true, // 有未使用的变量时，抛出错误
     "lib": ["esnext", "dom"],
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"],
+      "#/*": ["types/*"]
     }
   },
   "include": [
     "tests/**/*.ts",
     "src/**/*.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
@@ -31,7 +34,6 @@
   ],
   "exclude": [
     "node_modules",
-    "tests/server/**/*.ts",
     "dist",
     "**/*.js"
   ]
