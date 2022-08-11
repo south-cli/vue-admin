@@ -13,7 +13,8 @@
     </template>
 
     <Spin :spinning="loading">
-      内容。。。
+      <Block />
+      <Line />
     </Spin>
   </BasicContent>
 </template>
@@ -28,9 +29,8 @@ import { getDataTrends } from '@/servers/dashboard'
 import { DATE_FORMAT } from '@/utils/constants'
 import { searchList } from './data'
 import { Spin } from 'ant-design-vue'
-// import Pie from './components/Pie.vue'
-// import Line from './components/Line.vue'
-// import Descriptions from './components/Descriptions.vue'
+import Line from './components/Line.vue'
+import Block from './components/Block.vue'
 import dayjs from 'dayjs'
 import BasicSearch from '@/components/Search/BasicSearch.vue'
 import BasicContent from '@/components/Content/BasicContent.vue'
@@ -40,23 +40,16 @@ export default defineComponent({
   components: {
     Spin,
     BasicSearch,
-    BasicContent
+    BasicContent,
+    Line,
+    Block
   },
   setup() {
     const { loading, startLoading, endLoading } = useLoading()
 
     // 数据参数
     const datum = ref<IDashboardResult>({
-      game_data: [],
-      rows: {
-        cost: {},
-        pay: {},
-        reg: {},
-      },
-      items: {
-        hash: [],
-        legend: {},
-      },
+      data: {}
     })
 
     // 搜索数据
@@ -79,12 +72,9 @@ export default defineComponent({
     const handleSearch = async (values: IFormData) => {
       try {
         // 单选框数据处理- true：1 false：0
-        const { all_pay, new_pay, register, active, active_total } = values
+        const { all_pay, register } = values
         if (values.all_pay) values.all_pay = all_pay ? 1 : 0
-        if (values.new_pay) values.new_pay = new_pay ? 1 : 0
         if (values.register) values.register = register ? 1 : 0
-        if (values.active) values.active = active ? 1 : 0
-        if (values.active_total) values.active_total = active_total ? 1 : 0
 
         // 日期转化
         startLoading()
