@@ -4,14 +4,13 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
-    ACard: typeof import('ant-design-vue/es')['Card']
-    ACol: typeof import('ant-design-vue/es')['Col']
     ApiSelect: typeof import('./src/components/Selects/ApiSelect.vue')['default']
     ApiTreeSelect: typeof import('./src/components/Selects/ApiTreeSelect.vue')['default']
-    ARow: typeof import('ant-design-vue/es')['Row']
+    BasicComponent: typeof import('./src/components/Form/BasicComponent.vue')['default']
     BasicComponents: typeof import('./src/components/Form/BasicComponents.vue')['default']
     BasicContent: typeof import('./src/components/Content/BasicContent.vue')['default']
     BasicForm: typeof import('./src/components/Form/BasicForm.vue')['default']
+    BasicFormItem: typeof import('./src/components/Form/BasicFormItem.vue')['default']
     BasicLoading: typeof import('./src/components/Loading/BasicLoading.vue')['default']
     BasicModal: typeof import('./src/components/Modal/BasicModal.vue')['default']
     BasicPagination: typeof import('./src/components/Pagination/BasicPagination.vue')['default']
@@ -23,6 +22,7 @@ declare module 'vue' {
     DeleteBtn: typeof import('./src/components/Buttons/components/DeleteBtn.vue')['default']
     Echarts: typeof import('./src/components/Echarts/index.vue')['default']
     ExportBtn: typeof import('./src/components/Business/Buttons/ExportBtn.vue')['default']
+    FormItem: typeof import('./src/components/Form/FormItem.vue')['default']
     Fullscreen: typeof import('./src/components/Fullscreen/index.vue')['default']
     GameSelect: typeof import('./src/components/Business/Selects/GameSelect.vue')['default']
     GlobalSearch: typeof import('./src/components/GlobalSearch/index.vue')['default']

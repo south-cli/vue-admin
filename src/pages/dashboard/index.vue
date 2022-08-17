@@ -82,10 +82,8 @@ export default defineComponent({
         const query = { ...values }
         const { data: { data } } = await getDataTrends(query)
         datum.value = data
+      } finally {
         endLoading()
-      } catch(err) {
-        endLoading()
-        console.error(err)
       }
     }
 

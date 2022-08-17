@@ -4,7 +4,10 @@ import type {
   TreeSelectProps,
   RadioProps,
   CheckboxGroupProps,
-  DatePickerProps
+  DatePickerProps,
+  UploadProps,
+  RateProps,
+  SliderProps
 } from "ant-design-vue"
 import type { IAllDataType } from './public'
 import type { DefaultOptionType } from 'ant-design-vue/lib/select'
@@ -37,6 +40,15 @@ type IRadioComponents = 'RadioGroup' | 'Switch'
 // 时间组件
 type ITimeComponents = 'DatePicker' | 'RangePicker'
 
+// 上传组件
+type IUploadComponents = 'Upload'
+
+// 星级组件
+type IRateComponents = 'Rate'
+
+// 星级组件
+type ISliderComponents = 'Slider'
+
 // 自定义组件
 type ICustomizeComponents = 'Customize'
 
@@ -47,16 +59,19 @@ type IEditorComponents = 'WangEditor'
 type IPasswordStrength = 'PasswordStrength'
 
 // 组件集合
-export type IComponents = IDefaultDataComponents |
+export type IComponentType = IDefaultDataComponents |
                           ISelectComponents |
                           ICheckboxComponents |
                           ITimeComponents |
                           IRadioComponents |
                           ICustomizeComponents |
+                          IUploadComponents |
+                          IRateComponents |
+                          ISliderComponents |
                           IEditorComponents |
                           IPasswordStrength
 
-type IApi = (params?: unknown) => Promise<DefaultOptionType[]>
+export type IApi = (params?: unknown) => Promise<DefaultOptionType[]>
 
 // api参数
 interface IApiParam {
@@ -77,6 +92,9 @@ export type IComponentProps = InputProps |
                               CheckboxGroupProps |
                               RadioProps |
                               DatePickerProps |
+                              UploadProps |
+                              RateProps |
+                              SliderProps |
                               IApiSelectProps |
                               IApiTreeSelectProps |
                               IWangEditorProps
@@ -90,11 +108,12 @@ export type IFormRule = RuleObject & {
 export type IFormList = {
   key: string; // 唯一标识
   title: string; // 标题
+  placeholder?: string; // 占位符
   hidden?: boolean; // 是否隐藏
   rules?: IFormRule[]; // 规则
   labelCol?: number; // label宽度
   wrapperCol?: number; // 内容宽度
-  component: IComponents; // 组件
+  component: IComponentType; // 组件
   componentProps?: IComponentProps; // 组件参数
   render?: () => VNode; // 自定义渲染
 }
