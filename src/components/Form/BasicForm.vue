@@ -14,7 +14,7 @@
       <FormItem
         v-for="item in list"
         :key="item.key"
-        :name="item.key"
+        :name="handleFormName(item.key)"
         :label="item.title"
         :rules="!item.hidden ? item.rules : []"
         :class="{ '!hidden': item.hidden }"
@@ -122,12 +122,47 @@ export default defineComponent({
     }
 
     /**
+     * 处理嵌套数据
+     * @param arr - 键值数组
+     * @param obj - 表单数据对象
+     * @param value - 修改值
+     */
+    const deepNested = (arr: string[], obj: Record<string, IAllDataType>, value: IAllDataType) => {
+      const key = arr.shift()
+      if (!obj) obj = {}
+      if (key) {
+        if (!obj[key]) obj[key] = {}
+        if (arr.length) {
+          obj[key] = deepNested(arr, obj[key] as Record<string, IAllDataType>, value)
+        } else {
+          obj[key] = value
+        }
+      }
+      return obj
+    }
+
+    /**
      * 修改formState值
      * @param key - 键值
      * @param value - 修改值
      */
     const setFromState = (key: string, value: IAllDataType) => {
-      formState.value[key] = value
+      if (key.includes('.')) {
+        const arr = key.split('.')
+        deepNested(arr, formState.value, value)
+      } else {
+        formState.value[key] = value
+      }
+    }
+
+    /**
+     * 当表单名称中带有逗号，则分割逗号
+     * @param name - 表单名称
+     */
+    const handleFormName = (name: string) => {
+      let res: string | string[] = name
+      if (name.includes('.')) res = name.split('.')
+      return res
     }
 
     /**
@@ -151,6 +186,7 @@ export default defineComponent({
       formRef,
       formState,
       setFromState,
+      handleFormName,
       onFinish,
       onFinishFailed,
       handleSubmit,

@@ -1,6 +1,6 @@
 ## 简介
 
-使用了`vue3`,`vite2`,`TypeScript`,`antv`等主流技术开发的开箱即用的中后台前端项目，可通过`south-cli`中的`south create vue-project`生成该项目，使用`south-cli`中的`south create-vue page-name`生成对应页面。
+使用了`vue3`,`vite`,`TypeScript`,`antv`等主流技术开发的开箱即用的中后台前端项目，可通过`south-cli`中的`south create vue-project`生成该项目，使用`south-cli`中的`south create-vue page-name`生成对应页面。
 
 ## 安装使用
 
@@ -81,9 +81,8 @@ git push
 
 - [ ] 主题换肤功能
 - [ ] i18n语言切换
-- [ ] 表单嵌套结构
-- [ ] 包分析工具
-- [x] Mock数据
+- [x] 表单嵌套结构
+- [x] 包分析工具
 - [x] cli生成增删改查
 - [x] 剪切板功能
 - [x] 富文本组件
@@ -101,39 +100,47 @@ git push
 - [x] 搜索功能
 
 ## 关于封装
+  1. 功能扩展，在原有的api上拓展。
+  2. 功能整合，合并两个或两个以上组件的api。
+  3. 样式统一，避免后期样式变动，导致牵一发而动全身。
 
-  - 封装目的
+## 组件说明
 
-    1. 功能扩展，在原有的api上拓展。
-    2. 功能整合，合并两个或两个以上组件的api。
-    3. 样式统一，避免后期样式变动，导致牵一发而动全身。
-  
-  - 封装说明
-    1. `BasicForm`表单
-      ```base
-        key: string; // 唯一标识
-        title: string; // 标题
-        rules?: IFormRule[]; // 规则
-        component: IComponentType; // 组件名，参考(https://next.antdv.com/components/overview-cn)
-        componentProps?: IComponentProps; // 组件参数，官方组件参数
-      ```
-      **componentProps内的方法都是on开头，如dropdownVisibleChange要改为onDropdownVisibleChange**
+### 表单(BasicForm):
+| 属性名 | 必填 | 属性说明 |
+| --- | --- | --- |
+| key | 是 | 表单名称，如果存在逗号，则视为嵌套格式，如user.id => formState.user.id |
+| title | 是 | 表单标题 |
+| rules | 否 | 表单规则，[参考模板](https://ant.design/components/form-cn/#components-form-demo-basic) |
+| component | 是 | 组件名，参考Antv名称，如Input |
+| componentProps | 否 | 组件属性，参考对应文档API，方法都是**on开头**，如dropdownVisibleChange要改为onDropdownVisibleChange |
 
-    2. `BasicTable`表格
-      ```base
-        total: number; // 表格总数
-        ...other; // 表格UI参数，参考(https://xuliangzhan_admin.gitee.io/vxe-table/#/table/grid/basic)
-      ```
+### 表格(BasicTable):
+| 属性名 | 必填 | 属性说明 |
+| --- | --- | --- |
+| id | 否 | 唯一标识(被某些特定的功能所依赖) |
+| data | 是 | 表格数据 |
+| columns | 是 | 列数据 |
+| options | 否 | 表格API，[参考API](https://vxetable.cn/#/grid/api)
+| loading | 否 | 加载动画 |
+| offsetHeight | 否 | 高度偏移差，当表格高度过高出现滚动条的时候使用 |
+| isResize | 否 | 是否开启监听窗口变化而更改高度 |
 
-    3. `BasicPagination`分页器
-      ```base
-        total: number; // 分页总数
-        defaultCurrent: number; // 当前页码数
-      ```
+### 分页器(BasicPagination):
+| 属性名 | 必填 | 属性说明 |
+| --- | --- | --- |
+| total | 否 | 数据总数 |
+| page | 是 | 当前页数 |
+| pageSize | 是 | 每页条数 |
+| loading | 否 | 加载动画 |
 
-    4. 自定义组件
-      - 业务组件存放在`src/components/Business`目录下，每次新增组件想要在index.tsx文件中引入。
-      - 特殊自定义公共组件:
-        1. ApiSelect：点击下拉框自动获取下拉数据，在antv的Select参数基础上添加了api参数，根据api参数获取接口数据。
-        2. ApiTreeSelect：点击下拉框自动获取下拉数据，在antv的TreeSelect参数基础上添加了api参数，根据api参数获取接口数据。
-
+### API下拉框(ApiSelect、ApiTreeSelect):
+| 属性名 | 必填 | 属性说明 |
+| --- | --- | --- |
+| value | 否 | 下拉框绑定值 |
+| componentProps | 否 | 下拉框值，[ApiSelect属性](https://www.antdv.com/components/select-cn)，[ApiTreeSelect属性](https://www.antdv.com/components/tree-select-cn) |
+| api | 是 | API接口 |
+| params | 否 | 接口参数 |
+| onDropdownVisibleChange | 否 | 展开下拉菜单的回调 |
+### 自定义组件
+#### 业务组件存放在`src/components/Business`目录下，每次新增组件想要在src/components/Business/index.tsx文件中引入。
