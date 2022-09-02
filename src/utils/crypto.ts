@@ -11,7 +11,7 @@ const CRYPTO_SECRET = '__Vite_Admin_Secret__'
  * @param data - 加密数据
  * @param secret - 加密密钥
  */
-export function encryption(data: IAllDataType, secret: string = CRYPTO_SECRET) {
+export function encryption(data: IAllDataType, secret = CRYPTO_SECRET) {
   const code = JSON.stringify(data)
   return encrypt(code, secret).toString()
 }
@@ -21,7 +21,7 @@ export function encryption(data: IAllDataType, secret: string = CRYPTO_SECRET) {
  * @param data - 解密数据
  * @param secret - 解密密钥
  */
-export function decryption(data: string, secret: string = CRYPTO_SECRET) {
+export function decryption(data: string, secret = CRYPTO_SECRET) {
   const bytes = decrypt(data, secret)
   const originalText = bytes.toString(UTF8)
   if (originalText) {
