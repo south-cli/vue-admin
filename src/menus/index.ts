@@ -1,8 +1,6 @@
-import type { IMenus } from '../router/model'
+import type { IMenus } from './model'
 import { DemoMenus } from './demo'
 import { SystemMenus } from './system'
-
-// 如果Layout是以import Layout from '@/layouts/index.vue'形式引入,打包会报错
 
 // 菜单
 export const menus: IMenus[] = [
@@ -20,7 +18,7 @@ export const menus: IMenus[] = [
     path: '/404',
     redirect: '/404',
     meta: { hidden: true },
-    component: () => import('@/layouts/index.vue'),
+    component: () => import('@/layouts/default.vue'),
     children: [
       {
         name: 'EmptyPage',
@@ -56,7 +54,7 @@ export const menus: IMenus[] = [
       title: '仪表盘',
       icon: 'la:tachometer-alt'
     },
-    component: () => import('@/layouts/index.vue'),
+    component: () => import('@/layouts/default.vue'),
     children: [
       {
         name: 'DashboardPage',
@@ -66,7 +64,7 @@ export const menus: IMenus[] = [
           rule: '/dashboard',
           keepAlive: true
         },
-        component: () => import('@/pages/dashboard/DashboardPage.vue')
+        component: () => import('@/pages/dashboard/index.vue')
       }
     ]
   },

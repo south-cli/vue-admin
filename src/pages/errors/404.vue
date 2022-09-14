@@ -19,7 +19,7 @@ import { useRouter } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
 import { useTabStore } from '@/stores/tabs'
 import { storeToRefs } from 'pinia'
-import { getFirstMenu } from '@/utils/menus'
+import { getFirstMenu } from '@/menus/utils/helper'
 
 const router = useRouter()
 const menuStore = useMenuStore()

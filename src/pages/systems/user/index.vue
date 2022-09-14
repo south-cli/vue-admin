@@ -4,7 +4,7 @@
       <BasicSearch
         :list="searchList"
         :data="searches.data"
-        :loading="loading"
+        :isLoading="isLoading"
         :isCreate="pagePermission.create"
         @onCreate="onCreate"
         @handleFinish="handleSearch"
@@ -14,18 +14,25 @@
     <BasicTable
       :data="tables"
       :columns="tableColumns"
-      :loading="loading"
+      :isLoading="isLoading"
     >
       <template v-slot:operate='row'>
+        <Button
+          class="mr-2"
+          :isLoading="isLoading"
+          @click="openPermission(row.record.id)"
+        >
+          权限
+        </Button>
         <UpdateBtn
           v-if="pagePermission.update"
           class="mr-2"
-          :loading="createLoading"
+          :isLoading="isCreateLoading"
           @click="onUpdate(row.record)"
         />
         <DeleteBtn
           v-if="pagePermission.delete"
-          :loading="loading"
+          :isLoading="isLoading"
           @click="handleDelete(row.record.id)"
         />
       </template>
@@ -36,36 +43,53 @@
         :page="pagination.page"
         :pageSize="pagination.pageSize"
         :total="tables.total"
-        :loading="loading"
+        :isLoading="isLoading"
         @handleChange="handlePagination"
       />
     </template>
   </BasicContent>
 
   <BasicModal
-    v-model:visible="creates.visible"
-    :loading="createLoading"
+    v-model:isVisible="creates.isVisible"
+    :isLoading="isCreateLoading"
     :title="creates.title"
     @handleFinish="createSubmit"
     @handleCancel="onCloseCreate"
   >
     <BasicForm
       ref="createFormRef"
-      :list="createList(creates.id)"
+      :list="createList"
       :labelCol="{ span: 6 }"
       :data="creates.data"
       @handleFinish="handleCreate"
     />
   </BasicModal>
+
+  <PermissionDrawer
+    :isVisible="permissionConfig.isVisible"
+    :treeData="permissionConfig.treeData"
+    :checkedKeys="permissionConfig.checkedKeys"
+    @onClose="closePermission"
+    @onSubmit="permissionSubmit"
+  />
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'SystemUser'
+})
+</script>
 
 <script lang="ts" setup>
 import type { IFormData } from '#/form'
 import type { IBasicForm } from '@/components/Form/model'
 import type { ICreateData, ISearchData, ITableData, IPaginationData } from '#/global'
-import { message } from 'ant-design-vue'
+import type { DataNode } from 'ant-design-vue/lib/tree'
+import type { Key } from 'ant-design-vue/lib/vc-tree/interface'
+import { message, Button } from 'ant-design-vue'
 import { onMounted, reactive, ref } from 'vue'
-import { getSystemMenuPage, getSystemMenuById, createSystemMenu, updateSystemMenu, deleteSystemMenu } from '@/servers/systems/menu'
 import { UpdateBtn, DeleteBtn } from '@/components/Buttons'
 import { ADD_TITLE, EDIT_TITLE } from '@/utils/config'
 import { searchList, createList, tableColumns } from './data'
@@ -74,21 +98,37 @@ import { useCreateLoading } from '@/hooks/useCreateLoading'
 import { checkPermission } from '@/utils/permissions'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
+import { getPermission, savePermission } from '@/servers/systems/menu'
+import {
+  getSystemUserPage,
+  getSystemUserById,
+  createSystemUser,
+  updateSystemUser,
+  deleteSystemUser,
+} from '@/servers/systems/user'
 import BasicContent from '@/components/Content/BasicContent.vue'
 import BasicTable from '@/components/Table/BasicTable.vue'
 import BasicPagination from '@/components/Pagination/BasicPagination.vue'
 import BasicSearch from '@/components/Search/BasicSearch.vue'
 import BasicForm from '@/components/Form/BasicForm.vue'
 import BasicModal from '@/components/Modal/BasicModal.vue'
+import PermissionDrawer from './components/PermissionDrawer.vue'
+
+interface IPermissionConfig {
+  id: string;
+  isVisible: boolean;
+  checkedKeys: Key[];
+  treeData: DataNode[];
+}
 
 const createFormRef = ref<IBasicForm>()
 const userStore = useUserStore()
 const { permissions } = storeToRefs(userStore)
-const { loading, startLoading, endLoading } = useLoading()
-const { createLoading, startCreateLoading, endCreateLoading } = useCreateLoading()
+const { isLoading, startLoading, endLoading } = useLoading()
+const { isCreateLoading, startCreateLoading, endCreateLoading } = useCreateLoading()
 
 // 权限前缀
-const permissionPrefix = '/authority/menu'
+const permissionPrefix = '/authority/user'
 
 // 权限
 const pagePermission = reactive({
@@ -98,10 +138,18 @@ const pagePermission = reactive({
   delete: checkPermission(`${permissionPrefix}/delete`, permissions.value)
 })
 
+// 权限配置
+const permissionConfig = reactive<IPermissionConfig>({
+  id: '',
+  isVisible: false,
+  checkedKeys: [],
+  treeData: []
+})
+
 // 初始化新增数据
 const initCreate = {
   status: 1,
-  module: 'authority'
+  user: { name: { test: '1234' } }
 }
 
 // 搜索数据
@@ -112,7 +160,7 @@ const searches = reactive<ISearchData>({
 // 新增数据
 const creates = reactive<ICreateData>({
   id: '',
-  visible: false,
+  isVisible: false,
   title: '新增',
   data: initCreate
 })
@@ -154,7 +202,7 @@ const handleSearch = async (values: IFormData) => {
   const query = { ...pagination, ...values }
   try {
     startLoading()
-    const { data: { data } } = await getSystemMenuPage(query)
+    const { data: { data } } = await getSystemUserPage(query)
     const { items, total } = data
     tables.data = items
     tables.total = total
@@ -165,7 +213,7 @@ const handleSearch = async (values: IFormData) => {
 
 /** 点击新增 */
 const onCreate = () => {
-  creates.visible = !creates.visible
+  creates.isVisible = !creates.isVisible
   creates.title = ADD_TITLE
   creates.id = ''
   creates.data = initCreate
@@ -177,13 +225,13 @@ const onCreate = () => {
  */
 const onUpdate = async (record: IFormData) => {
   const { id, name } = record
-  creates.visible = !creates.visible
+  creates.isVisible = !creates.isVisible
   creates.id = id as string
   creates.title = EDIT_TITLE(name as string)
 
   try {
     startCreateLoading()
-    const { data: { data } } = await getSystemMenuById(id as string)
+    const { data: { data } } = await getSystemUserById(id as string)
     creates.data = data
   } finally {
     endCreateLoading()
@@ -197,11 +245,11 @@ const onUpdate = async (record: IFormData) => {
 const handleCreate = async (values: IFormData) => {
   try {
     startCreateLoading()
-    const functions = () => creates.id ? updateSystemMenu(creates.id, values) : createSystemMenu(values)
+    const functions = () => creates.id ? updateSystemUser(creates.id, values) : createSystemUser(values)
     const { data } = await functions()
     getPage()
     creates.id = ''
-    creates.visible = false
+    creates.isVisible = false
     creates.data = initCreate
     createFormRef.value?.handleReset()
     message.success(data?.message || '操作成功')
@@ -212,7 +260,7 @@ const handleCreate = async (values: IFormData) => {
 
 /** 关闭新增/编辑 */
 const onCloseCreate = () => {
-  creates.visible = false
+  creates.isVisible = false
 }
 
 /**
@@ -222,7 +270,7 @@ const onCloseCreate = () => {
 const handleDelete = async (id: string | number) => {
   try {
     startLoading()
-    const { data } = await deleteSystemMenu(id as string)
+    const { data } = await deleteSystemUser(id as string)
     if (data?.code === 200) {
       message.success(data?.message || '删除成功')
       getPage()
@@ -241,5 +289,44 @@ const handlePagination = (page: number, pageSize: number) => {
   pagination.page = page
   pagination.pageSize = pageSize
   getPage()
+}
+
+/** 开启权限 */
+const openPermission = async (id: string) => {
+  try {
+    startLoading()
+    const params = { userId: id }
+    const { data } = await getPermission(params)
+    const { data: { defaultCheckedKeys, treeData } } = data
+    permissionConfig.id = id
+    permissionConfig.treeData = treeData
+    permissionConfig.checkedKeys = Object.values(defaultCheckedKeys)
+    permissionConfig.isVisible = true
+  } finally {
+    endLoading()
+  }
+}
+
+/** 关闭权限 */
+const closePermission = () => {
+  permissionConfig.isVisible = false
+}
+
+/**
+ * 权限提交
+ */
+const permissionSubmit = async (checked: Key[]) => {
+  try {
+    startLoading()
+    const params = {
+      menuIds: checked,
+      userId: permissionConfig.id
+    }
+    const { data } = await savePermission(params)
+    message.success(data.message || '授权成功')
+    permissionConfig.isVisible = false
+  } finally {
+    endLoading()
+  }
 }
 </script>

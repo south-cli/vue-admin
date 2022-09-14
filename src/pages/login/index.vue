@@ -58,7 +58,7 @@
             type="primary"
             htmlType="submit"
             class="w-full mt-5px rounded-5px tracking-2px"
-            :loading="loading && !isLock"
+            :loading="isLoading && !isLock"
             :disabled="formState.username === '' || formState.password.length < 6 || isLock"
           >
             登录
@@ -88,7 +88,7 @@ import { useRouter } from 'vue-router'
 import { useWatermark } from '@/hooks/useWatermark'
 import { permissionsToArray } from '@/utils/permissions'
 import { menus } from '@/menus'
-import { getMenus, getFirstMenu } from '@/utils/menus'
+import { getMenus, getFirstMenu } from '@/menus/utils/helper'
 import {
   Form,
   FormItem,
@@ -100,7 +100,7 @@ import Logo from '@/assets/images/logo.png'
 import PageLoading from '@/components/Loading/PageLoading.vue'
 
 const router = useRouter()
-const { loading, startLoading, endLoading } = useLoading()
+const { isLoading, startLoading, endLoading } = useLoading()
 const { setToken } = useToken()
 const { RemoveWatermark } = useWatermark()
 const isLock = ref(false)

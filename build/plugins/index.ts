@@ -25,9 +25,7 @@ export function createVitePlugins() {
         presetIcons()
       ],
     }),
-    vueJsx({
-      // options are passed on to @vue/babel-plugin-jsx
-    }),
+    vueJsx({}),
     // 压缩包
     viteCompression(),
     AutoImport({
@@ -46,7 +44,9 @@ export function createVitePlugins() {
       brotliSize: true,
     }),
     // css按需加载
-    configStyleImportPlugin()
+    configStyleImportPlugin(),
+    // 自动生成路由
+    // configPageImportPlugin()
   ]
 
   return vitePlugins

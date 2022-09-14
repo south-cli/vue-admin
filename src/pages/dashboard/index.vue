@@ -5,19 +5,27 @@
         :labelCol="70"
         :list="searchList"
         :data="searches.data"
-        :loading="loading"
+        :isLoading="isLoading"
         :isSearch="true"
         :isCreate="false"
         @handleFinish="handleSearch"
       />
     </template>
 
-    <Spin :spinning="loading">
+    <Spin :spinning="isLoading">
       <Block />
       <Line />
     </Spin>
   </BasicContent>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  name: 'DashboardPage'
+})
+</script>
 
 <script lang="ts" setup>
 import type { IDashboardResult } from './model'
@@ -35,7 +43,7 @@ import dayjs from 'dayjs'
 import BasicSearch from '@/components/Search/BasicSearch.vue'
 import BasicContent from '@/components/Content/BasicContent.vue'
 
-const { loading, startLoading, endLoading } = useLoading()
+const { isLoading, startLoading, endLoading } = useLoading()
 
 // 数据参数
 const datum = ref<IDashboardResult>({

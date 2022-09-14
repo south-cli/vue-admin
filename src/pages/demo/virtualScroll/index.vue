@@ -10,7 +10,7 @@
     </p>
 
     <p>
-      <List height="240" class="my-list" :loading="demo.loading" :data="demo.list">
+      <List height="240" class="my-list" :isLoading="demo.isLoading" :data="demo.list">
         <template #default="{ items }">
           <div class="my-list-item" v-for="(item, index) in items" :key="index">{{ item.label }}</div>
         </template>
@@ -31,7 +31,7 @@ interface ItemVO {
 
 const mockList: ItemVO[] = []
 const demo = reactive({
-  loading: false,
+  isLoading: false,
   list: [] as ItemVO[]
 })
 
@@ -53,9 +53,9 @@ const getList = (size: number): Promise<ItemVO[]> => {
 }
 
 const loadData = async (size: number) => {
-  demo.loading = true
+  demo.isLoading = true
   demo.list = await getList(size)
-  demo.loading = false
+  demo.isLoading = false
   const startTime = Date.now()
   await nextTick()
   await message.info({ content: `渲染 ${size} 行，用时 ${Date.now() - startTime}毫秒`, key: 'info' })

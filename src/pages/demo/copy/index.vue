@@ -10,18 +10,8 @@
   </BasicContent>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script lang="ts" setup>
 import BasicContent from '@/components/Content/BasicContent.vue'
 import Copy from '@/components/Copy/index.vue'
 import CopyBtn from '@/components/Copy/CopyBtn.vue'
-
-export default defineComponent({
-  name: 'DemoCopy',
-  components: {
-    BasicContent,
-    Copy,
-    CopyBtn
-  }
-})
 </script>
