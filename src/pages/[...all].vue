@@ -1,7 +1,7 @@
 <template>
   <div class="absolute left-50% top-50% -translate-x-1/2 -translate-y-1/2 text-center">
     <h1 class="animation w-full text-6rem font-bold">
-      403
+      404
     </h1>
     <p class="w-full text-20px font-bold mt-15px text-dark-700">
       当前页面无法访问，可能没权限或已删除
@@ -13,35 +13,39 @@
 </template>
 
 <script lang="ts" setup>
-import type { IMenuItem } from '@/stores/menu'
 import { Button } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
-import { useMenuStore } from '@/stores/menu'
 import { useTabStore } from '@/stores/tabs'
+import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
-import { getFirstMenu } from '@/menus/utils/helper'
+import { getFirstMenu, getMenuByKey } from '@/menus/utils/helper'
+import { defaultMenus } from '@/menus'
 
 const router = useRouter()
-const menuStore = useMenuStore()
 const tabStore = useTabStore()
-const { setFirstMenu } = menuStore
-const { openKeys, menuList, firstMenu } = storeToRefs(menuStore)
+const userStore = useUserStore()
+const { permissions } = storeToRefs(userStore)
+const {
+  setActiveKey,
+  addTabs,
+  setNav
+} = tabStore
 
-// 跳转首页
+/** 跳转首页 */
 const goIndex = () => {
-let obj: IMenuItem = { key: '', path: '', top: '', topTitle: '', title: '' }
-if (firstMenu.value?.key) {
-  obj = firstMenu.value
-} else {
-  obj = getFirstMenu(menuList.value)
-  setFirstMenu(obj)
-}
-// 跳转第一个有效菜单
-const { key, path, title, top } = obj
-// 菜单展开，添加标签
-if (top) openKeys.value = [top]
-if (key) tabStore.addTabs({ key, path, title })
-router.push(path)
+  const firstMenu = getFirstMenu(defaultMenus, permissions.value)
+  router.push(firstMenu)
+  const menuByKeyProps = {
+    menus: defaultMenus,
+    permissions: permissions.value,
+    key: firstMenu
+  }
+  const newItems = getMenuByKey(menuByKeyProps)
+  if (newItems) {
+    setActiveKey(newItems.key)
+    setNav([])
+    addTabs(newItems)
+  }
 }
 </script>
 

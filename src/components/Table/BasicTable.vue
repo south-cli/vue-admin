@@ -16,10 +16,9 @@
 
 <script lang="ts" setup>
 import type { PropType } from 'vue'
-import type { ITableData } from '#/global'
+import type { ITableData } from '#/public'
 import type { VxeGridProps, VxeGridPropTypes } from 'vxe-table'
 import {
-  defineProps,
   h,
   ref,
   reactive,

@@ -14,24 +14,24 @@
       <TabPane
         class="overflow-auto"
         v-for="(item, index) in tabs"
-        :key="item.path"
+        :key="item.key"
       >
         <template #tab>
           <Dropdown :trigger="['contextmenu']">
             <div
               class="flex items-center justify-between w-full px-3 py-1 mr-0 border border-light-900"
               :class="{
-                'bg-blue-700': isActive(item.path),
-                'text-white': isActive(item.path)
+                'bg-blue-700': isActive(item.key),
+                'text-white': isActive(item.key)
               }"
             >
-              <div class="mr-5px">{{ item.title }}</div>
-              <div v-if="tabs.length > 1" @click.stop="handleRemove(item.path)">
+              <div class="mr-5px">{{ item.label }}</div>
+              <div v-if="tabs.length > 1" @click.stop="handleRemove(item.key)">
                 <CloseOutlined
                   class="p-1 rounded-1/2 text-11px"
                   :class="{
-                    'hover:bg-light-900': !isActive(item.path),
-                    'hover:bg-blue-800': isActive(item.path),
+                    'hover:bg-light-900': !isActive(item.key),
+                    'hover:bg-blue-800': isActive(item.key),
                   }"
                   style="margin-right: 0 !important"
                 />
@@ -40,8 +40,7 @@
             <template #overlay>
               <DropdownMenu
                 :activeKey="activeKey"
-                :currentKey="item.path"
-                :pathName="pathName"
+                :currentKey="item.key"
                 :index="index"
                 :list="tabs"
                 @handleDropdown="handleDropdown"
@@ -63,7 +62,7 @@
           <Icon
             class="flex items-center justify-center text-lg cursor-pointer"
             :class="{ 'animate-spin': isRefresh }"
-            @click="handleRefresh(pathName)"
+            @click="handleRefresh()"
             icon="ant-design:reload-outlined"
           />
         </Tooltip>
@@ -89,7 +88,6 @@
             <DropdownMenu
               :currentKey="activeKey"
               :activeKey="activeKey"
-              :pathName="pathName"
               :index="getTabIndex(activeKey)"
               :list="tabs"
               @handleDropdown="handleDropdown"
@@ -117,13 +115,13 @@
 
 <script lang="ts" setup>
 import type { Key } from 'ant-design-vue/lib/_util/type'
-import { defineProps, defineEmits, defineExpose, reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTabStore } from '@/stores/tabs'
 import { CloseOutlined } from '@ant-design/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDebounceFn } from '@vueuse/core'
 import { TabEnums } from '../model'
+import { onMounted, reactive, ref, watch } from 'vue'
 import {
   Tabs,
   TabPane,
@@ -133,6 +131,11 @@ import {
 } from 'ant-design-vue'
 import DropdownMenu from './DropdownMenu.vue'
 import Icon from '@/components/Icon/index.vue'
+import { useUserStore } from '@/stores/user'
+import { useMenuStore } from '@/stores/menu'
+import { defaultMenus } from '@/menus'
+import { getMenuByKey, getOpenMenuByRouter } from '@/menus/utils/helper'
+import { routeToKeepalive } from '@/router/utils/helper'
 
 interface ITimeout {
   icon: null | NodeJS.Timeout;
@@ -152,26 +155,82 @@ defineProps({
 const route = useRoute()
 const router = useRouter()
 const tabStore = useTabStore()
+const menuStore = useMenuStore()
+const userStore = useUserStore()
+const { permissions } = storeToRefs(userStore)
+const {
+  tabs,
+  prevPath,
+  activeKey,
+  cacheRoutes
+} = storeToRefs(tabStore)
+const { setOpenKey } = menuStore
+const {
+  setActiveKey,
+  addTabs,
+  setNav,
+  addPrevPath,
+  closeTabs,
+  closeOther,
+  closeLeft,
+  closeRight
+} = tabStore
 const isRefresh = ref(false) // 是否刷新
 const isDropdown = ref(false) // 是否显示下拉菜单
 const timeout = reactive<ITimeout>({
   icon: null,
   refresh: null
 })
-const {
-  tabs,
-  prevPath,
-  pathName,
-  activeKey,
-  cacheRoutes
-} = storeToRefs(tabStore)
-const {
-  addPrevPath,
-  removeCurrent,
-  removeOther,
-  removeLeft,
-  removeRight
-} = tabStore
+
+// 首次进入添加标签
+onMounted(() => {
+  if (permissions.value?.length) {
+    handleAddTab()
+  }
+})
+
+// 监听路由变化添加标签
+watch(() => route.path, value => {
+  handleAddTab(value)
+})
+
+// 监听权限变化添加标签
+watch(() => permissions.value, value => {
+  handleAddTab()
+})
+
+// 监听选中标签
+watch(activeKey, value => {
+  // 当选中贴标签不等于当前路由则跳转
+  if (value !== route.path) {
+    router.push(value)
+
+    // 处理菜单展开
+    const openKey = getOpenMenuByRouter(value)
+    setOpenKey(openKey)
+  }
+})
+
+/**
+ * 添加标签
+ * @param path - 路径
+ */
+const handleAddTab = (path = route.path) => {
+  if (permissions.value?.length > 0) {
+    if (path === '/') return
+    const menuByKeyProps = {
+      menus: defaultMenus,
+      permissions: permissions.value,
+      key: path
+    }
+    const newItems = getMenuByKey(menuByKeyProps)
+    if (newItems?.key) {
+      setActiveKey(newItems.key)
+      setNav(newItems.nav)
+      addTabs(newItems)
+    }
+  }
+}
 
 /**
  * 是否是选中
@@ -192,18 +251,18 @@ const onChange = (targetKey: Key) => {
  * @param targetKey - 当前选中唯一值
  */
 const handleRemove = (targetKey: string) => {
-  removeCurrent(targetKey)
+  closeTabs(targetKey)
 }
 
 /** 获取tabs下标 */
 const getTabIndex = (key: string): number => {
-  return tabs.value.findIndex(item => item.path === key)
+  return tabs.value.findIndex(item => item.key === key)
 }
 
 /**
  * 刷新当前页
  */
-const handleRefresh = (pathName: string) => {
+const handleRefresh = (key = activeKey.value) => {
   // 关闭右键菜单显示
   isDropdown.value = false
   // 缓存上一个路径地址
@@ -214,10 +273,11 @@ const handleRefresh = (pathName: string) => {
     isRefresh.value = true
   
     // 去除缓存路由中当前路由
-    cacheRoutes.value = cacheRoutes.value.filter(item => item !== pathName)
+    const cacheRoute = routeToKeepalive(key)
+    cacheRoutes.value = cacheRoutes.value.filter(item => item !== cacheRoute)
 
     // 调转空白页
-    router.push('/errors/empty')
+    router.push('/loading')
   }
 
   /** 清除timeout */
@@ -247,7 +307,6 @@ const handleRefresh = (pathName: string) => {
  * 点击右键功能
  * @param type - 右键下拉选中类型
  * @param key - 标签唯一值，可作为路由
- * @param pathName - 文件名，keepalive使用
  */
 const handleDropdown = useDebounceFn((type: TabEnums, key: string) => {
   // 关闭右键菜单显示
@@ -256,22 +315,22 @@ const handleDropdown = useDebounceFn((type: TabEnums, key: string) => {
   switch (type) {
     // 关闭标签
     case TabEnums.CLOSE_CURRENT:
-      removeCurrent(key)
+      closeTabs(key)
       break
 
     // 关闭其他
     case TabEnums.CLOSE_OTHER:
-      removeOther(key)
+      closeOther(key)
       break
 
     // 关闭左侧
     case TabEnums.CLOSE_LEFT:
-      removeLeft(key)
+      closeLeft(key)
       break
 
     // 关闭右侧
     case TabEnums.CLOSE_RIGHT:
-      removeRight(key)
+      closeRight(key)
       break
 
     default:

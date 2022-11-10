@@ -62,19 +62,15 @@
       'z-1': isPhone && !isCollapsed
     }"
   >
+
     <div v-if="permissions.length > 0" class="h-full min-w-1024px">
       <router-view v-slot="{ Component }">
-        <keep-alive :include="tabStore.cacheRoutes">
+        <keep-alive :include="cacheRoutes">
           <component
-            v-if="$route.meta.keepAlive"
             :is="Component"
             :key="$route.name"
           />
         </keep-alive>
-        <component
-          :is="Component"
-          v-if="!$route.meta.keepAlive"
-        />
       </router-view>
     </div>
     <Skeleton
@@ -101,41 +97,40 @@ import { useMenuStore } from '@/stores/menu'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { useDebounceFn } from '@vueuse/core'
-import { getPermissions } from '@/servers/permissions'
+import { getPermissions } from '@/servers/permission'
 import { permissionsToArray } from '@/utils/permissions'
 import { message, Skeleton } from 'ant-design-vue'
-import { menus } from '@/menus'
 import { useRoute } from 'vue-router'
-import { getMenus, getCurrentMenuByRoute } from '@/menus/utils/helper'
-import { useLoading } from '@/hooks/useLoading'
 import { updatePassword } from '@/servers/login'
 import Header from './components/Header.vue'
 import Menu from './components/Menu.vue'
 import Tabs from './components/Tabs.vue'
 import UpdatePassword from '@/components/UpdatePassword/index.vue'
+import { routeToKeepalive } from '@/router/utils/helper'
 
 const route = useRoute()
 const tabStore = useTabStore()
 const menuStore = useMenuStore()
 const userStore = useUserStore()
-const { addTabs, setPathName, addCacheRoutes } = tabStore
-const { setSelectedKeys } = menuStore
 const { setUserInfo, setPermissions } = userStore
 const { userInfo, permissions } = storeToRefs(userStore)
+const { cacheRoutes } = storeToRefs(tabStore)
+const { isPhone } = storeToRefs(menuStore)
+const { addCacheRoutes } = tabStore
+
 const username = ref(userInfo.value?.username || '') // 用户名
+const isLoading = ref(false)
 const isCollapsed = ref(false) // 是否收起菜单
 const isMaximize = ref(false) // 是否窗口最大化
 const isUpdatePassword = ref(false) // 是否显示修改密码
-const {
-  isPhone,
-  openKeys,
-  menuList,
-} = storeToRefs(menuStore)
-const { isLoading, startLoading, endLoading } = useLoading()
 
 onMounted(() => {
   handleIsPhone()
   startResize()
+
+  // 转为keepalive形式
+  const cacheRoute = routeToKeepalive(route.path)
+  addCacheRoutes(cacheRoute) // 添加keepalive缓存
 
   // 如果用户id不存在则重新获取
   if (!userInfo.value?.id) {
@@ -157,19 +152,6 @@ const getUserInfo = async () => {
       username.value = user.username
       setUserInfo(user)
       setPermissions(newPermissions)
-
-      // 菜单处理
-      const newMenus = getMenus(menus, newPermissions)
-      const { key, path, title, top } = getCurrentMenuByRoute(route.path, newMenus)
-      menuList.value = newMenus
-      // 菜单展开，添加标签
-      if (top) openKeys.value = [top]
-      if (key) {
-        addTabs({ key, path, title })
-        setSelectedKeys([route.path])
-        setPathName(key)
-        addCacheRoutes(key)
-      }
     }
   } catch(err) {
     console.error(err)
@@ -187,12 +169,12 @@ const onUpdatePassword = () => {
  */
 const handleUpdatePassword = async (params: unknown) => {
   try {
-    startLoading()
+    isLoading.value = true
     const { data } = await updatePassword(params)
     message.success(data.message || '修改成功')
     isUpdatePassword.value = !isUpdatePassword.value
   } finally {
-    endLoading()
+    isLoading.value = false
   }
 }
 
@@ -227,6 +209,10 @@ const startResize = () => {
 const stopResize = () => {
   window.removeEventListener('resize', handleSize)
 }
+
+defineExpose({
+  cacheRoutes
+})
 </script>
 
 <style lang="less" scoped>

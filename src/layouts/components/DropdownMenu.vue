@@ -3,7 +3,7 @@
     <MenuItem
       :key="currentKey"
       :disabled="activeKey !== currentKey"
-      @click="handleRefresh"
+      @click="handleRefresh()"
     >
       <RedoOutlined class="mr-5px transform rotate-270" />
       <span>重新加载</span>
@@ -44,9 +44,9 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, defineEmits, PropType } from 'vue'
-import { TabEnums } from '../model'
 import type { ITabs } from '@/stores/tabs'
+import { PropType } from 'vue'
+import { TabEnums } from '../model'
 import { Menu, MenuItem } from 'ant-design-vue'
 import {
   RedoOutlined,
@@ -57,16 +57,12 @@ import {
 
 const emit = defineEmits(['handleDropdown', 'handleRefresh'])
 
-const props = defineProps({
+defineProps({
   currentKey: {
     type: String,
     required: true
   },
   activeKey: {
-    type: String,
-    required: true
-  },
-  pathName: {
     type: String,
     required: true
   },
@@ -91,6 +87,6 @@ const handleDropdown = (type: TabEnums, key: string) => {
 
 /** 刷新当前页 */
 const handleRefresh = () => {
-  emit('handleRefresh', props.pathName)
+  emit('handleRefresh')
 }
 </script>

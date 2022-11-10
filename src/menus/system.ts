@@ -1,37 +1,22 @@
-import type { IMenus } from './model'
+import type { ISideMenu } from '#/public'
 
 // 系统管理
-export const SystemMenus: IMenus[] = [
+export const SystemMenus: ISideMenu[] = [
   {
-    name: 'System',
-    path: '/systems',
-    meta: {
-      title: '系统管理',
-      icon: 'ion:settings-outline'
-    },
-    component: () => import('@/layouts/default.vue'),
-    redirect: '/systems/user',
+    label: '系统管理',
+    key: 'system',
+    icon: 'ion:settings-outline',
     children: [
       {
-        name: 'SystemUser',
-        path: '/systems/user',
-        meta: {
-          title: '用户管理',
-          rule: '/authority/user',
-          keepAlive: true
-        },
-        component: () => import('@/pages/systems/user/index.vue')
+        label: '用户管理',
+        key: '/system/user',
+        rule: '/authority/user'
       },
       {
-        name: 'SystemMenu',
-        path: '/systems/menu',
-        meta: {
-          title: '菜单管理',
-          rule: '/authority/menu',
-          keepAlive: true
-        },
-        component: () => import('@/pages/systems/menu/index.vue')
-      }
+        label: '菜单管理',
+        key: '/system/menu',
+        rule: '/authority/menu'
+      },
     ]
-  },
+  }
 ]

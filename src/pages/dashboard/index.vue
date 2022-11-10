@@ -29,9 +29,9 @@ export default defineComponent({
 
 <script lang="ts" setup>
 import type { IDashboardResult } from './model'
-import type { ISearchData } from '#/global'
+import type { ISearchData } from '#/public'
 import { onMounted, reactive, ref } from 'vue'
-import { useLoading } from '@/hooks/useLoading'
+import { useTitle } from '@/hooks/useTitle'
 import { IFormData } from '#/form'
 import { getDataTrends } from '@/servers/dashboard'
 import { DATE_FORMAT } from '@/utils/constants'
@@ -43,7 +43,9 @@ import dayjs from 'dayjs'
 import BasicSearch from '@/components/Search/BasicSearch.vue'
 import BasicContent from '@/components/Content/BasicContent.vue'
 
-const { isLoading, startLoading, endLoading } = useLoading()
+useTitle('数据展览')
+
+const isLoading = ref(false)
 
 // 数据参数
 const datum = ref<IDashboardResult>({
@@ -75,13 +77,13 @@ const handleSearch = async (values: IFormData) => {
     if (values.register) values.register = register ? 1 : 0
 
     // 日期转化
-    startLoading()
+    isLoading.value = true
     searches.data = values
     const query = { ...values }
     const { data: { data } } = await getDataTrends(query)
     datum.value = data
   } finally {
-    endLoading()
+    isLoading.value = false
   }
 }
 </script>
