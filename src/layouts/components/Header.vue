@@ -46,7 +46,7 @@
 </template>
 
 <script lang="ts" setup>
-import { createVNode } from 'vue'
+import { createVNode, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToken } from '@/hooks/useToken'
 import { useTabStore } from '@/stores/tabs'
@@ -95,7 +95,11 @@ const tabStore = useTabStore()
 const userStore = useUserStore()
 const { removeToken } = useToken()
 const { clearInfo } = userStore
-const { closeAllTab, clearCacheRoutes } = tabStore
+const {
+  closeAllTab,
+  clearCacheRoutes,
+  setActiveKey
+} = tabStore
 const { nav } = storeToRefs(tabStore)
 
 /** 收缩菜单 */
@@ -110,11 +114,15 @@ const handleLogout = () => {
     icon: createVNode(ExclamationCircleOutlined),
     content: '是否确定退出系统?',
     onOk() {
-      clearInfo()
       removeToken()
+      clearInfo()
       closeAllTab()
       clearCacheRoutes()
-      router.push('/login')
+      setActiveKey('')
+
+      nextTick(() => {
+        router.push('/login')
+      })
     }
   })
 }

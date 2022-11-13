@@ -7,7 +7,7 @@
 - 获取项目代码
 
 ```bash
-git clone git@github.com:south-cli/vue-admin.git
+git clone https://github.com/Southliu/vue-vite-admin.git
 ```
 
 - 选择目录
