@@ -22,7 +22,7 @@
               class="flex items-center justify-between w-full px-3 py-1 mr-0 border border-light-900"
               :class="{
                 'bg-blue-700': isActive(item.key),
-                'text-white': isActive(item.key)
+                '!text-white': isActive(item.key)
               }"
             >
               <div class="mr-5px">{{ item.label }}</div>
@@ -60,7 +60,7 @@
           </template>
 
           <Icon
-            class="flex items-center justify-center text-lg cursor-pointer"
+            class="flex items-center justify-center change text-lg cursor-pointer"
             :class="{ 'animate-spin': isRefresh }"
             @click="handleRefresh()"
             icon="ant-design:reload-outlined"
@@ -78,7 +78,7 @@
         <Dropdown :trigger="['click']" @visibleChange="handleDropdownChange">
           <div>
             <Icon
-              class="flex items-center justify-center text-lg cursor-pointer transition-all transform "
+              class="flex items-center justify-center change text-lg cursor-pointer transition-all transform "
               :class="{ 'rotate-180': isDropdown, 'rotate-0': !isDropdown }"
               icon="ant-design:down-outlined"
             />
@@ -103,7 +103,7 @@
           </template>
 
           <Icon
-            class="flex items-center justify-center text-lg cursor-pointer"
+            class="flex items-center justify-center change text-lg cursor-pointer"
             @click="handleMaximize()"
             :icon="isMaximize ? 'ant-design:compress-outlined' : 'ant-design:expand-outlined'"
           />
@@ -132,9 +132,8 @@ import {
 import DropdownMenu from './DropdownMenu.vue'
 import Icon from '@/components/Icon/index.vue'
 import { useUserStore } from '@/stores/user'
-import { useMenuStore } from '@/stores/menu'
 import { defaultMenus } from '@/menus'
-import { getMenuByKey, getOpenMenuByRouter } from '@/menus/utils/helper'
+import { getMenuByKey } from '@/menus/utils/helper'
 import { routeToKeepalive } from '@/router/utils/helper'
 
 interface ITimeout {
@@ -155,7 +154,6 @@ defineProps({
 const route = useRoute()
 const router = useRouter()
 const tabStore = useTabStore()
-const menuStore = useMenuStore()
 const userStore = useUserStore()
 const { permissions } = storeToRefs(userStore)
 const {
@@ -164,7 +162,6 @@ const {
   activeKey,
   cacheRoutes
 } = storeToRefs(tabStore)
-const { setOpenKey } = menuStore
 const {
   setActiveKey,
   addTabs,
@@ -204,10 +201,6 @@ watch(activeKey, value => {
   // 当选中贴标签不等于当前路由则跳转
   if (value !== route.path) {
     router.push(value)
-
-    // 处理菜单展开
-    const openKey = getOpenMenuByRouter(value)
-    setOpenKey(openKey)
   }
 })
 
