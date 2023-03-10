@@ -62,5 +62,5 @@ export function updateSystemMenu(id: string, data: unknown) {
  * @param data - 权限数据
  */
 export function savePermission(data: unknown) {
-  return request.put(`${API.URL}/authorize-save`, data)
+  return request.put(`${API.URL}/authorize/save`, data)
 }

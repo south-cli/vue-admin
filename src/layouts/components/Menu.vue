@@ -1,5 +1,5 @@
 <template>
-  <div class="py-1 box-border transition-all overflow-hidden">
+  <div class="py-1 box-border transition-all overflow-hidden z-2">
     <div
       class="flex content-center px-5 py-2 cursor-pointer"
       :class="{ 'justify-center': isCollapsed }"
@@ -21,7 +21,7 @@
     </div>
     <div class="menu-height overflow-y-auto">
       <Menu
-        v-model:openKeys="openKeys"
+        v-model:openKeys="currentOpenKeys"
         v-model:selectedKeys="selectedKeys"
         class="h-full z-1000"
         mode="inline"
@@ -46,8 +46,7 @@
 
 <script lang="ts" setup>
 import type { Key } from 'ant-design-vue/lib/_util/type'
-import { watch, onMounted } from 'vue'
-import { useTabStore } from '@/stores/tabs'
+import { watch, onMounted, ref } from 'vue'
 import { useMenuStore } from '@/stores/menu'
 import { useUserStore } from '@/stores/user'
 import { useRoute, useRouter } from 'vue-router'
@@ -57,7 +56,6 @@ import { defaultMenus } from '@/menus'
 import {
   filterMenus,
   getFirstMenu,
-  getMenuByKey,
   getOpenMenuByRouter,
   splitPath
 } from '@/menus/utils/helper'
@@ -66,7 +64,7 @@ import Logo from '@/assets/images/logo.png'
 
 const emit = defineEmits(['toggleCollapsed'])
 
-defineProps({
+const props = defineProps({
   isCollapsed: {
     type: Boolean,
     required: true
@@ -75,7 +73,6 @@ defineProps({
 
 const route = useRoute()
 const router = useRouter()
-const tabStore = useTabStore()
 const menuStore = useMenuStore()
 const userStore = useUserStore()
 const { permissions } = storeToRefs(userStore)
@@ -87,10 +84,12 @@ const {
 } = storeToRefs(menuStore)
 const {
   setMenus,
-  setOpenKey,
+  setOpenKeys,
   setSelectedKeys
 } = menuStore
-const { setActiveKey, addTabs } = tabStore
+
+// 当前展开项，收缩模式不展开
+const currentOpenKeys = ref(openKeys.value)
 
 onMounted(() => {
   if (permissions.value.length > 0) {
@@ -100,8 +99,7 @@ onMounted(() => {
   
     // 展开菜单
     const newOpenKey = getOpenMenuByRouter(route.path)
-    setOpenKey(newOpenKey)
-    setActiveKey(route.path)
+    setOpenKeys(newOpenKey)
     setSelectedKeys([route.path])
   }
 })
@@ -109,9 +107,17 @@ onMounted(() => {
 // 监听路径
 watch(() => route.path, value => {
   const newOpenKey = getOpenMenuByRouter(value)
-  setActiveKey(value)
-  setOpenKey(newOpenKey)
+  setOpenKeys(newOpenKey)
   setSelectedKeys([value])
+})
+
+// 监听展开
+watch(() => openKeys, openKeys => {
+  if (props.isCollapsed || isPhone.value) {
+    currentOpenKeys.value = []
+  } else {
+    currentOpenKeys.value = openKeys.value
+  }
 })
 
 /**
@@ -120,16 +126,6 @@ watch(() => route.path, value => {
  */
 const goPath = (path: string) => {
   router.push(path)
-  const menuByKeyProps = {
-    menus: defaultMenus,
-    permissions: permissions.value,
-    key: path
-  }
-  const newItems = getMenuByKey(menuByKeyProps)
-  if (newItems) {
-    setActiveKey(newItems.key)
-    addTabs(newItems)
-  }
 }
 
 /** 点击logo */
@@ -158,27 +154,27 @@ const diffOpenMenu = (arr: string[], lastArr: string[]) => {
 
 /**
  * 菜单展开事件
- * @param openKey - 展开下标
+ * @param openKeys - 展开下标
  */
-const openChange = (openKey: Key[]) => {
+const openChange = (openKeys: Key[]) => {
   const newOpenKey: string[] = []
   let last = '' // 最后一个目录结构
 
   // 当目录有展开值
-  if (openKey.length > 0) {
-    last = openKey[openKey.length - 1].toString()
+  if (openKeys.length > 0) {
+    last = openKeys[openKeys.length - 1].toString()
     const lastArr: string[] = splitPath(last)
     newOpenKey.push(last)
 
     // 对比当前展开目录是否是同一层级
-    for (let i = openKey.length - 2; i >= 0; i--) {
-      const arr = splitPath(openKey[i].toString())
+    for (let i = openKeys.length - 2; i >= 0; i--) {
+      const arr = splitPath(openKeys[i].toString())
       const hasOpenKey = diffOpenMenu(arr, lastArr)
-      if (hasOpenKey) newOpenKey.unshift(openKey[i].toString())
+      if (hasOpenKey) newOpenKey.unshift(openKeys[i].toString())
     }
   }
 
-  setOpenKey(newOpenKey)
+  setOpenKeys(newOpenKey)
 }
 
 /**
@@ -206,6 +202,6 @@ const hiddenMenu = () => {
 }
 
 .cover {
-  left: @layout_left;
+  left: @layoutLeft;
 }
 </style>
