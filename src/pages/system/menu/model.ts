@@ -1,114 +1,156 @@
-import type { IFormList } from "#/form"
-import type { VxeGridPropTypes } from "vxe-table"
-import { INPUT_REQUIRED, SELECT_REQUIRED } from "@/utils/config"
-import { MENU_ACTIONS, MENU_MODULE, MENU_STATUS } from "@/utils/constants"
+import type { FormList } from "#/form";
+import type { TableColumnsProps } from "#/public";
+import type { DefaultOptionType } from 'ant-design-vue/lib/select';
+import { FORM_REQUIRED } from "@/utils/config";
+import { MENU_TYPE } from "@/utils/constants";
+
+export interface SystemMenuTree {
+  children?: SystemMenuTree[];
+  enable?: boolean;
+  id: string;
+  menuType: number;
+  link?: boolean;
+  menuName: string;
+  menuNameEn: string;
+  menuNo?: string;
+  menuRoute: string;
+  parentId?: string;
+  permissions: string;
+  sortNum?: number;
+  visible?: boolean;
+}
+
+// 权限前缀
+const permissionPrefix = '/authority/menu';
+
+// 权限
+export const pagePermission = {
+  page: `${permissionPrefix}/index`,
+  create: `${permissionPrefix}/create`,
+  update: `${permissionPrefix}/update`,
+  delete: `${permissionPrefix}/delete`,
+};
 
 // 搜索数据
-export const searchList: IFormList[] = [
+export const searchList: FormList[] = [
   {
-    label: '状态',
-    name: 'status',
-    component: 'Select',
-    componentProps: {
-      options: MENU_STATUS
-    }
-  },
-  {
-    label: '模块',
-    name: 'module',
-    wrapperCol: 170,
-    component: 'Select',
-    componentProps: {
-      options: MENU_MODULE
-    }
-  },
-  {
-    label: '控制器',
-    name: 'controller',
+    label: '菜单名称',
+    name: 'menuName',
     component: 'Input'
   }
-]
-
-// 新增数据
-export const createList: (id: string) => IFormList[] = id => [
-  {
-    label: '名称',
-    name: 'name',
-    rules: INPUT_REQUIRED,
-    component: 'Input'
-  },
-  {
-    label: '状态',
-    name: 'status',
-    rules: SELECT_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      options: MENU_STATUS
-    }
-  },
-  {
-    label: '模块',
-    name: 'module',
-    rules: SELECT_REQUIRED,
-    component: 'Select',
-    componentProps: {
-      options: MENU_MODULE
-    }
-  },
-  {
-    label: '控制器',
-    name: 'controller',
-    rules: INPUT_REQUIRED,
-    component: 'Input'
-  },
-  {
-    label: '同时创建菜单',
-    name: 'actions',
-    hidden: !!id,
-    component: 'CheckboxGroup',
-    componentProps: {
-      options: MENU_ACTIONS
-    }
-  },
-]
+];
 
 // 表格数据
-export const tableColumns: VxeGridPropTypes.Columns = [
+export const tableColumns: TableColumnsProps[] = [
   {
     title: 'ID',
-    field: 'id'
+    dataIndex: 'id',
+    width: 150
   },
   {
-    title: '名称',
-    field: 'name'
+    title: '中文名称',
+    dataIndex: 'menuName',
+    width: 100
   },
   {
-    title: '状态',
-    field: 'status'
+    title: '接口权限',
+    dataIndex: 'permissions',
+    width: 180
   },
   {
-    title: '模块',
-    field: 'module'
+    title: '菜单路由',
+    dataIndex: 'menuRoute',
+    width: 180
   },
   {
-    title: '控制器',
-    field: 'controller'
+    title: '菜单类型',
+    dataIndex: 'menuType',
+    echoArr: MENU_TYPE,
+    width: 100
   },
   {
-    title: '创建时间',
-    field: 'created_at',
-    minWidth: 140
+    title: '客户端',
+    dataIndex: 'clientName',
+    width: 100
   },
   {
-    title: '更新时间',
-    field: 'updated_at',
-    minWidth: 140
+    title: '排序',
+    dataIndex: 'sortNum',
+    width: 80
   },
   {
     title: '操作',
-    field: 'operate',
-    minWidth: 160,
-    showOverflow: false,
-    slots: { default: 'operate' }
+    dataIndex: 'operate',
+    width: 320,
+    fixed: 'right',
+    ellipsis: false,
   }
-]
+];
+
+// 新增数据
+export const createList = (parentList: DefaultOptionType[], menuType = 0): FormList[] => [
+  {
+    label: '中文名称',
+    name: 'menuName',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      maxlength: 60,
+    }
+  },
+  {
+    label: '菜单编码',
+    name: 'menuNo',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      maxlength: 60,
+    }
+  },
+  {
+    label: '接口权限',
+    name: 'permissions',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      maxlength: 60,
+    }
+  },
+  {
+    label: '菜单类型',
+    name: 'menuType',
+    rules: FORM_REQUIRED,
+    component: 'Select',
+    componentProps: {
+      options: MENU_TYPE
+    }
+  },
+  {
+    label: '菜单路由',
+    name: 'menuRoute',
+    rules: FORM_REQUIRED,
+    hidden: menuType !== 1,
+    component: 'Input'
+  },
+  {
+    label: '排序',
+    name: 'sortNum',
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      maxlength: 20,
+    }
+  },
+  {
+    label: '父级菜单',
+    name: 'parentId',
+    component: 'TreeSelect',
+    componentProps: {
+      treeData: parentList,
+      fieldNames: {
+        label: 'menuName',
+        value: 'id'
+      }
+    }
+  },
+];

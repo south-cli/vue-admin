@@ -4,12 +4,19 @@
  * 修改主题
  * @param color - 字体颜色
  * @param bgColor - 背景颜色
+ * @param svgColor - svg颜色
+ * @param layoutContentBg - layout内容背景色
  */
-.changeTheme(@color: @primaryColor, @bgColor: @primaryBg, @svgColor: @svgColor) {
+.changeTheme(
+  @color: @primaryColor,
+  @bgColor: @primaryBg,
+  @svgColor: @svgColor,
+  @layoutContentBg: @layoutContentBg,
+) {
   color: @color !important;
   background: @bgColor !important;
 
-  .change svg {
+  .change-icon {
     color: @svgColor !important;
   }
 
@@ -23,8 +30,9 @@
   }
 
   #searches,
-  #container,
-  #pagination {
+  #pagination,
+  .theme-bg,
+  .layout-header {
     color: @color !important;
     background: @bgColor !important;
   }
@@ -35,14 +43,11 @@
     color: @color !important;
   }
 
-  #searches .ant-form-item-label > label {
-    color: @color !important;
+  #layoutContent {
+    background-color: @layoutContentBg !important;
   }
 
-  // xve-table
-  .body--wrapper,
-  .vxe-body--row {
+  #searches .ant-form-item-label > label {
     color: @color !important;
-    background: @bgColor !important;
   }
 }

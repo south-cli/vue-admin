@@ -1,5 +1,9 @@
 <template>
-  <div id="searches" class="pt-4 pb-1 px-5">
+  <BasicCard
+    v-if="!!list?.length"
+    id="searches"
+    :isMarginBottom="!!list?.length"
+  >
     <Form
       ref="formRef"
       labelAlign="left"
@@ -13,123 +17,126 @@
       <FormItem
         v-for="item in list"
         :key="`${item.name}`"
-        :name="item.name"
+        :name="handleFilterTrim(item.name)"
         :label="item.label"
         :rules="item.rules"
-        :labelCol="{ style: { width: `${ item.labelCol }px` } }"
-        :wrapperCol="{ style: { width: `${ item.wrapperCol }px` } }"
-        :style="{ display: 'inline-block' }"
+        :labelCol="handleLabelCol(item.labelCol)"
+        :wrapperCol="handleWrapperCol(item.wrapperCol)"
       >
         <BasicComponents
+          v-if="item.component !== 'slot'"
           class="min-w-100px"
           :item="item"
           :data="formState"
           :setData="setFromState"
+          @pressEnter="onFinish"
         />
+
+        <slot v-else :name="item.name" />
       </FormItem>
 
-      <FormItem v-if="isSearch">
+      <template v-if="isSearch && list?.length">
         <Button
           type="primary"
           htmlType="submit"
+          class="btn-space"
           :loading="isLoading"
         >
           <template #icon>
             <SearchOutlined />
           </template>
-          <span>搜索</span>
+          <span>{{ searchText }}</span>
         </Button>
-      </FormItem>
+      </template>
 
-      <FormItem v-if="isCreate">
+      <template v-if="isClear && list?.length">
         <Button
-          v-if="isCreate"
-          type="primary"
-          @click="onCreate"
+          v-if="isClear"
+          class="btn-space"
+          :loading="isLoading"
+          @click="onClear"
         >
           <template #icon>
-            <PlusOutlined />
+            <ClearOutlined />
           </template>
-          <span>新增</span>
+          <span>{{ clearText }}</span>
         </Button>
-      </FormItem>
+      </template>
 
       <slot name="other"></slot>
     </Form>
-  </div>
+  </BasicCard>
 </template>
 
 <script lang="ts" setup>
 /**
  * @description: 搜索组件
  */
-import type { PropType } from 'vue'
-import type { FormInstance } from 'ant-design-vue'
-import type { IFormData, IFormList } from '#/form'
-import type { ColProps } from 'ant-design-vue'
-import type { ValidateErrorEntity } from 'ant-design-vue/lib/form/interface'
-import type { IAllDataType } from '#/public'
-import { watch, ref } from 'vue'
-import { Form, FormItem, Button } from 'ant-design-vue'
-import { SearchOutlined, PlusOutlined } from '@ant-design/icons-vue'
-import { useDebounceFn } from '@vueuse/core'
-import { filterEmptyValue } from '@/utils/helper'
-import BasicComponents from '../Form/BasicComponents.vue'
+import type { FormInstance } from 'ant-design-vue';
+import type { FormData, FormList } from '#/form';
+import type { ColProps } from 'ant-design-vue';
+import type { ValidateErrorEntity } from 'ant-design-vue/lib/form/interface';
+import { watch, ref } from 'vue';
+import { Form, FormItem, Button } from 'ant-design-vue';
+import { useDebounceFn } from '@vueuse/core';
+import { filterEmptyValue, handleFilterTrim } from '@/utils/helper';
+import { handleLabelCol, handleWrapperCol } from './utils/helper';
+import { SearchOutlined, ClearOutlined } from '@ant-design/icons-vue';
+import BasicComponents from '../Form/BasicComponents.vue';
+import BasicCard from '../Card/BasicCard.vue';
 
-type IFinishFun = (values: IFormData) => void
+type FinishFun = (values: FormData) => void
 
-const emit = defineEmits(['handleFinish', 'onCreate'])
+interface DefineEmits {
+  (e: 'handleFinish', params: FormData): void;
+}
 
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true
-  },
-  list: {
-    type: Array as PropType<IFormList[]>,
-    required: true
-  },
-  wrapperCol: {
-    type: Object as PropType<Partial<ColProps>>,
-    required: false,
-  },
-  isLoading: {
-    type: Boolean
-  },
-  isSearch: {
-    type: Boolean,
-    default: true
-  },
-  isCreate: {
-    type: Boolean
-  }
-})
+const emit = defineEmits<DefineEmits>();
 
-const formRef = ref<FormInstance>()
-const formState = ref(props.data)
+interface DefineProps {
+  data: FormData;
+  list: FormList[];
+  wrapperCol?: Partial<ColProps>;
+  isLoading?: boolean;
+  isSearch?: boolean;
+  isClear?: boolean;
+  initSearch?: FormData; // 初始化搜索
+  searchText?: string; // 搜索文本
+  clearText?: string; // 清除文本
+}
+
+const props = withDefaults(defineProps<DefineProps>(), {
+  isSearch: true,
+  isClear: true,
+  clearText: '清除',
+  searchText: '搜索',
+});
+
+const formRef = ref<FormInstance>();
+const formState = ref(props.data);
 
 // 监听表单数据变化
 watch(() => props.data, value => {
-  formState.value = value
-})
+  formState.value = value;
+});
 
 /** 外部调内部提交方法 */
 const handleSubmit = useDebounceFn(() => {
   formRef.value
     ?.validateFields()
     .then(values => {
-      const params = filterEmptyValue(values)
-      emit('handleFinish', params)
+      const params = filterEmptyValue(values);
+      emit('handleFinish', params);
     })
     .catch(info => {
-      console.error('错误信息:', info)
-    })
-})
+      console.error('错误信息:', info);
+    });
+});
 
 /** 外部调内部重置方法 */
 const handleReset = () => {
-  formRef.value?.resetFields()
-}
+  formRef.value?.resetFields();
+};
 
 /**
  * 处理嵌套数据
@@ -137,60 +144,61 @@ const handleReset = () => {
  * @param obj - 表单数据对象
  * @param value - 修改值
  */
-const deepNested = (arr: string[], obj: Record<string, IAllDataType>, value: IAllDataType) => {
-  const key = arr.shift()?.trim()
-  if (!obj) obj = {}
+const deepNested = (arr: string[], obj: Record<string, unknown>, value: unknown) => {
+  const key = arr.shift()?.trim();
+  if (!obj) obj = {};
   if (key) {
-    if (!obj[key]) obj[key] = {}
+    if (!obj[key]) obj[key] = {};
     if (arr.length) {
-      obj[key] = deepNested(arr, obj[key] as Record<string, IAllDataType>, value)
+      obj[key] = deepNested(arr, obj[key] as Record<string, unknown>, value);
     } else {
-      obj[key] = value
+      obj[key] = value;
     }
   }
-  return obj
-}
+  return obj;
+};
 
 /**
  * 修改formState值
  * @param key - 键值
  * @param value - 修改值
  */
-const setFromState = (key: string | string[], value: IAllDataType) => {
+const setFromState = (key: string | string[], value: unknown) => {
   if (Array.isArray(key)) {
-    const arr = JSON.parse(JSON.stringify(key))
-    deepNested(arr, formState.value, value)
+    const arr = JSON.parse(JSON.stringify(key));
+    deepNested(arr, formState.value, value);
   } else {
-    formState.value[key?.trim()] = value
+    formState.value[key?.trim()] = value;
   }
-}
+};
 
-/** 点击新增 */
-const onCreate = () => {
-  emit('onCreate')
-}
+/** 点击清除 */
+const onClear = () => {
+  const value = props.initSearch ? { ...props.initSearch } : {};
+  emit('handleFinish', value);
+};
 
 /**
  * 提交处理
  * @param values - 表单数据
  */
-const onFinish: IFinishFun = useDebounceFn(values => {
-  const params = filterEmptyValue(values)
-  emit('handleFinish', params)
-})
+const onFinish: FinishFun = useDebounceFn(values => {
+  const params = filterEmptyValue(values);
+  emit('handleFinish', params);
+});
 
 /**
  * 错误处理
  * @param errorInfo - 错误信息
  */
 const onFinishFailed = (errorInfo: ValidateErrorEntity<string>) => {
-  console.error('错误信息:', errorInfo)
-}
+  console.error('错误信息:', errorInfo);
+};
 
 defineExpose({
   handleSubmit,
   handleReset
-})
+});
 </script>
 
 <style>

@@ -1,159 +1,244 @@
 <template>
-  <div :id="id" class="vxe_table" :style="{ height: tableHeight + 'px' }">
-    <Grid
-      v-bind="gridOptions"
-      :loading="isLoading"
-      :data="data.data"
-      :columns="handleColumns(columns)"
-    >
-      <template #operate="{ row }">
-        <slot name="operate" :record="row" />
-      </template>
-    </Grid>
-  </div>
+  <Table
+    :id="id"
+    :size="size"
+    :rowKey="rowKey"
+    :loading="isLoading"
+    :rowSelection="rowSelection"
+    bordered
+    :pagination="handleFilterPagination(pagination)"
+    :columns="(handleColumns(columns) as ColumnsType)"
+    :dataSource="tableData"
+    :scroll="{ y: tableHeight, x: scrollX }"
+    @resizeColumn="handleResizeColumn"
+    @change="onChange"
+  >
+    <template #bodyCell="{ column, record, index }">
+      <span v-if="(column as TableColumnsProps)?.type === 'index'">
+        {{ index + 1 }}
+      </span>
+
+      <span
+        v-else-if="(column as TableColumnsProps).echoArr"
+        :title="getEchoContent(record, column)"
+        :style="getEchoStyle(record, column)"
+      >
+        {{ getEchoContent(record, column, EMPTY_VALUE) }}
+      </span>
+
+      <TooltipText
+        v-else-if="(column as TableColumnsProps).tooltipKey"
+        :text="record?.[column.dataIndex as string]"
+        :tooltipText="record?.[(column as TableColumnsProps).tooltipKey as string]"
+      />
+
+      <slot
+        v-else
+        :name="column.dataIndex"
+        :record="record"
+        :rowIndex="index"
+      >
+        {{
+          ![undefined, null, ''].includes(record?.[column.dataIndex as string]) ?
+          record?.[column.dataIndex as string] : EMPTY_VALUE
+        }}
+      </slot>
+    </template>
+  </Table>
 </template>
 
 <script lang="ts" setup>
-import type { PropType } from 'vue'
-import type { ITableData } from '#/public'
-import type { VxeGridProps, VxeGridPropTypes } from 'vxe-table'
+import type { ColumnsType, TablePaginationConfig } from 'ant-design-vue/es/table';
+import type { TableData, TableColumnsProps } from '#/public';
+import type { DefaultOptionType } from 'ant-design-vue/es/select';
+import type { TableProps } from 'ant-design-vue';
 import {
-  h,
   ref,
-  reactive,
+  watch,
   onMounted,
   onUnmounted
-} from 'vue'
-import { Grid } from 'vxe-table'
-import { useTableHeight } from './hooks/useTableHeight'
-import { useDebounceFn } from '@vueuse/core'
-import { EMPTY_VALUE } from '@/utils/config'
+} from 'vue';
+import { Table } from 'ant-design-vue';
+import { useDebounceFn } from '@vueuse/core';
+import { useTableHeight } from './hooks/useTableHeight';
+import { handleEchoArr, handleEchoColor } from '@/utils/helper';
+import { EMPTY_VALUE } from '@/utils/config';
+import TooltipText from '../TooltipText/index.vue';
 
-const props = defineProps({
-  id: {
-    type: String,
-    required: false,
-    default: 'table'
-  },
-  data: {
-    type: Object as PropType<ITableData>,
-    required: true
-  },
-  columns: {
-    type: Array as PropType<VxeGridPropTypes.Columns>,
-    required: true
-  },
-  options: {
-    type: Object as PropType<VxeGridProps>,
-    required: false,
-  },
-  isLoading: {
-    type: Boolean,
-    required: false,
-    default: false
-  },
-  // 高度偏移差
-  offsetHeight: {
-    type: Number,
-    required: false,
-    default: 0
-  },
-  // 是否开启监听窗口变化而更改高度
-  isResize: {
-    type: Boolean,
-    required: false,
-    default: true
-  }
-})
+defineOptions({
+  name: 'BasicTable'
+});
 
-const tableHeight = ref(0)
+interface DefineProps extends Omit<TableProps, 'columns'> {
+  id?: string;
+  rowKey?: string;
+  data: TableData[];
+  columns: ColumnsType;
+  isLoading?: boolean;
+  offsetHeight?: number;
+  isResize?: boolean;
+  rowSelection?: TableProps['rowSelection'];
+}
+
+const props = withDefaults(defineProps<DefineProps>(), {
+  isResize: true,
+  isLoading: false,
+  offsetHeight: 0,
+  id: 'table',
+  rowKey: 'id',
+  size: 'middle'
+});
+
+const tableHeight = ref(0);
+const scrollX = ref(300);
+const tableData = ref(props.data || []);
 
 onMounted(() => {
-  getTableHeight()
+  getTableHeight();
+  getScrollX();
   if (props.isResize) {
-    startResize()
+    startResize();
   }
-})
+});
 
 onUnmounted(() => {
   if (props.isResize) {
-    stopResize()
+    stopResize();
   }
-})
+});
 
-// 表格参数
-const gridOptions = reactive<VxeGridProps>({
-  border: true, // 边框
-  showOverflow: true, // 内容过长时显示为省略号
-  showHeaderOverflow: true, // 表头所有内容过长时显示为省略号
-  autoResize: true, // 自动监听父元素的变化去重新计算表格
-  stripe: true, // 斑马纹
-  size: 'small', // 表格尺寸
-  rowConfig: {
-    useKey: true, // 是否需要为每一行的 VNode 设置 key 属性
-    isHover: true, // 当鼠标移到行时，是否要高亮当前行
-    isCurrent: true // 当鼠标点击行时，是否要高亮当前行
-  },
-  sortConfig: {
-    trigger: 'cell'
-  },
-  columnConfig: {
-    resizable: true // 每一列是否启用列宽调整
-  },
-  scrollX: {
-    enabled: true // 横向虚拟滚动配置
-  },
-  scrollY: {
-    enabled: true // 纵向虚拟滚动配置
-  },
-  ...props.options
-})
+watch(() => props.data, value => {
+  tableData.value = value || [];
+});
+
+/** 获取x轴数据 */
+function getScrollX() {
+  let result = 0;
+
+  for (let i = 0; i < props.columns?.length; i++) {
+    const item = props.columns[i];
+    let width: string | number = item.width || item.maxWidth || item.minWidth || 50;
+
+    if (typeof width === 'string') {
+      if (width.includes('%')) {
+        width = width.substring(0, width.length - 1);
+      }
+      if (width.includes('px')) {
+        width = width.substring(0, width.length - 2);
+      }
+      width = Number(width);
+    }
+
+    result += width;
+  }
+
+  scrollX.value = result || 300;
+}
+
+/** 获取表格高度 */
+const getTableHeight = () => {
+  const [height] = useTableHeight(props.id, props.offsetHeight);
+  tableHeight.value = height < 150 ? 150 : height;
+};
+
+// 滚动事件防抖
+const handler = () => getTableHeight();
+const handleSize = useDebounceFn(handler, 200);
+
+/**
+ * 获取回显内容
+ * @param record - 当前行数据
+ * @param column - 表格列的配置
+ */
+const getEchoContent = (
+  record: Record<string, unknown>,
+  column: TableColumnsProps,
+  empty = ''
+) => {
+  return handleEchoArr(
+    record?.[column.dataIndex as string] ?? '',
+    (column as TableColumnsProps)?.echoArr as DefaultOptionType[]
+  ) ?? empty;
+};
+
+/**
+ * 获取回显样式
+ * @param record - 当前行数据
+ * @param column - 表格列的配置
+ */
+const getEchoStyle = (record: Record<string, unknown>, column: TableColumnsProps) => {
+  return `color: ${handleEchoColor(
+    record?.[column.dataIndex as string] ?? '',
+    (column as TableColumnsProps)?.echoArr as DefaultOptionType[]
+  )}`;
+};
+
+/** 开始监听滚动事件 */
+const startResize = () => {
+  window.addEventListener('resize', handleSize);
+};
+
+/** 结束监听滚动事件 */
+const stopResize = () => {
+  window.removeEventListener('resize', handleSize);
+};
+
+/** 列拖拽 */
+const handleResizeColumn: TableProps['onResizeColumn'] = (w, col) => {
+  col.width = w;
+  const newTableData = [...tableData.value];
+
+  for (let i = 0; i < newTableData?.length; i++) {
+    const item = newTableData[i];
+    if (item.dataIndex === col.dataIndex) {
+      item.width = w;
+      break;
+    }
+  }
+  
+  tableData.value = newTableData;
+};
 
 /**
  * 处理表格数据，为空显示'-'
  * @param array - 表格列值
  */
-const handleColumns = (array?: VxeGridPropTypes.Columns) => {
-  if (!array) return undefined
+const handleColumns = (array?: ColumnsType) => {
+  if (!array) return undefined;
 
   for (let i = 0; i < array.length; i++) {
-    const element = array[i]
+    const item = array[i];
     // 初始化最小宽度70
-    element.minWidth = element.minWidth || 50
-
-    // 如果表格存在默认值设置，则跳过当前循环
-    if (element.slots && Object.keys(element.slots).length > 0) continue
-
-    // 为每项添加default插槽
-    if (!element.slots) element.slots = {}
-    element.slots = {
-      default: ({ row }) => [
-        h('span', {
-          innerHTML: row?.[element.field as string] || EMPTY_VALUE
-        })
-      ]
-    }
+    item.width = item.width || 50;
+    // 列拖拽
+    item.resizable = item.resizable ?? true;
+    // 是否自动省略
+    item.ellipsis = item.ellipsis ?? true;
   }
 
-  return array
-}
+  return array;
+};
 
-/** 获取表格高度 */
-const getTableHeight = () => {
-  tableHeight.value = useTableHeight(props.id, props.offsetHeight)
-}
+/**
+ * 显示总数
+ * @param total - 总数
+ */
+ const showTotal = (total: number): string => {
+  return `共 ${total || 0} 条数据`;
+};
 
-// 滚动事件防抖
-const handler = () => getTableHeight()
-const handleSize = useDebounceFn(handler, 200)
+/**
+ * 处理分页参数
+ * @param obj - 分页数据
+ */
+const handleFilterPagination = (obj?: false | TablePaginationConfig) => {
+  if (!obj) return false;
 
-/** 开始监听滚动事件 */
-const startResize = () => {
-  window.addEventListener('resize', handleSize)
-}
-
-/** 结束监听滚动事件 */
-const stopResize = () => {
-  window.removeEventListener('resize', handleSize)
-}
+  return {
+    showSizeChanger: true,
+    showQuickJumper: true,
+    showTotal: () => showTotal(obj.total || 0),
+    ...obj,
+  };
+};
 </script>

@@ -9,7 +9,7 @@
       class="whitespace-nowrap"
     >
       <span
-        class="#000000d9 text-14px"
+        class="text-14px"
         :class="{
           'opacity-60': index < list.length - 1
         }"
@@ -18,7 +18,7 @@
       </span>
       <span
         v-if="index < list.length - 1"
-        class="px-3px"
+        class="px-3px text-#8b8b8b"
       >
         /
       </span>
@@ -27,17 +27,15 @@
 </template>
 
 <script lang="ts" setup>
-import type { PropType } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useMenuStore } from '@/stores/menu'
+import { storeToRefs } from 'pinia';
+import { useMenuStore } from '@/stores/menu';
 
-const menuStore = useMenuStore()
-const { isPhone } = storeToRefs(menuStore)
+const menuStore = useMenuStore();
+const { isPhone } = storeToRefs(menuStore);
 
-defineProps({
-  list: {
-    type: Array as PropType<string[]>,
-    required: true
-  }
-})
+interface DefineProps {
+  list: string[];
+}
+
+withDefaults(defineProps<DefineProps>(), {});
 </script>

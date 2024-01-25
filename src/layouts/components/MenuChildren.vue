@@ -1,58 +1,69 @@
 <template>
-  <SubMenu
+  <template
     v-for="item in list"
     :key="item.key"
-    :data-title="item.label"
   >
-    <template #icon>
-      <Icon
-        v-if="item?.icon"
-        class="mt-2px"
-        :icon="item.icon"
-        :style="{ fontSize: '16px' }"
-      />
-    </template>
-
-    <template #title>
-      {{ item.label }}
-    </template>
-
-    <template
-      v-for="child in item.children"
-      :key="child.key"
-    >
-      <MenuItem
-        v-if="!child?.children?.length"
-        :key="child.key"
-        @click="handleClick(child.key)"
+    <template v-if="item.children?.length && item.menuType !== 1">
+      <SubMenu
+        :data-title="item.label"
+        :key="item.key"
       >
-        {{ child.label }}
-      </MenuItem>
+        <template #icon>
+          <Icon
+            v-if="item?.icon"
+            class="mt-2px"
+            :icon="item.icon"
+            :style="{ fontSize: '16px' }"
+          />
+        </template>
 
-      <MenuChildren
-        v-else
-        :list="[child]"
-        :handleClick="handleClick"
-      />
+        <template #title>
+          {{ item.label }}
+        </template>
+
+        <MenuChildren
+          v-if="item.children?.length"
+          :list="item.children"
+          :handleClick="handleClick"
+        />
+      </SubMenu>
     </template>
 
-  </SubMenu>
+    <template v-else>
+      <MenuItem
+        :key="item.key"
+        @click="handleClick(item.key)"
+      >
+        <template #icon>
+          <Icon
+            v-if="item?.icon"
+            class="mt-2px"
+            :icon="item.icon"
+            :style="{ fontSize: '16px' }"
+          />
+        </template>
+
+        <span>
+          {{ item.label }}
+        </span>
+      </MenuItem>
+    </template>
+  </template>
 </template>
 
 <script lang="ts" setup>
-import type { PropType } from 'vue'
-import { MenuItem, SubMenu } from 'ant-design-vue'
-import type { ISideMenu } from '#/public'
-import Icon from '@/components/Icon/index.vue'
+import { MenuItem, SubMenu } from 'ant-design-vue';
+import type { SideMenu } from '#/public';
+import { Icon } from '@iconify/vue';
 
-defineProps({
-  list: {
-    type: Array as PropType<ISideMenu[]>,
-    required: true
-  },
-  handleClick: {
-    type: Function as PropType<(key: string) => void>,
-    required: true
-  }
-})
+defineOptions({
+  name: 'MenuChildren'
+});
+
+interface DefineProps {
+  list: SideMenu[];
+  handleClick: (key: string) => void;
+}
+
+withDefaults(defineProps<DefineProps>(), {});
 </script>

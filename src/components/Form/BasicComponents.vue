@@ -1,52 +1,61 @@
-<script lang="ts">
-import type { IFormList } from '#/form'
-import type { IAllDataType } from '#/public'
-import type { PropType } from 'vue'
-import { defineComponent, h } from 'vue'
-import { componentMap } from './utils/componentMap'
-import { createPlaceholder, getComponentProps } from './utils/helper'
+<template>
+  <div :class="`flex items-center ${attrs.class || ''}`">
+    <component
+      :is="Comp"
+      :placeholder="placeholder"
+      allowClear
+      v-bind="{
+        ...getComponentProps(
+            item,
+            data,
+            setData
+          ),
+          ...item.componentProps
+      }"
+    />
+    <span v-if="item.unit" class="ml-5px whitespace-nowrap">
+      {{ item.unit }}
+    </span>
+  </div>
+</template>
 
-export default defineComponent({
-  name: 'BasicComponents',
-  props: {
-    item: {
-      type: Object as PropType<IFormList>,
-      required: true
-    },
-    data: {
-      type: Object as PropType<Record<string, IAllDataType>>,
-      required: true
-    },
-    setData: {
-      type: Function as PropType<(key: string | string[], value: IAllDataType) => void>,
-      required: true
-    }
-  },
-  setup(props) {
-    let Comp: ReturnType<typeof defineComponent>
+<script lang="ts" setup>
+import type { FormData, FormList } from '#/form';
+import { defineComponent, useAttrs, watch } from 'vue';
+import { componentMap } from './utils/componentMap';
+import { createPlaceholder, getComponentProps } from './utils/helper';
 
-    // 组件
-    if (props.item.component === 'customize') {
-      Comp = props.item.render
-    } else {
-      Comp = componentMap.get(props.item.component)
-    }
+defineOptions({
+  name: 'BasicComponents'
+});
 
-    // 占位符
-    const placeholder = props.item.placeholder || createPlaceholder(props.item.component)
+interface DefineProps {
+  item: FormList;
+  data: FormData;
+  setData: (key: string | string[], value: unknown) => void;
+}
 
-    // 渲染组件
-    return () => h(Comp, {
-      className: 'min-w-70px',
-      placeholder,
-      allowClear: true,
-      ...getComponentProps(
-        props.item,
-        props.data,
-        props.setData
-      ),
-      ...props.item.componentProps
-    })
+const props = withDefaults(defineProps<DefineProps>(), {});
+
+const attrs = useAttrs();
+let Comp: ReturnType<typeof defineComponent>;
+
+// 组件
+if (props.item.component !== 'customize') {
+  Comp = componentMap.get(props.item.component);
+} else {
+  Comp = props.item.render;
+}
+
+watch(() => props.item, () => {
+  // 组件
+  if (props.item.component !== 'customize') {
+    Comp = componentMap.get(props.item.component);
+  } else {
+    Comp = props.item.render;
   }
-})
+}, { deep: true });
+
+// 占位符
+const placeholder = props.item.placeholder || createPlaceholder(props.item.component);
 </script>

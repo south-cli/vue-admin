@@ -1,33 +1,21 @@
-import type { DefaultOptionType } from 'ant-design-vue/lib/select'
-import type { IServerResult } from '#/public'
-import { request } from '@/utils/request'
+import { request } from '@/servers/request';
 
 enum API {
   URL = '/platform/partner',
 }
 
-interface IResult {
+interface ResultData {
   id: string;
   name: string;
 }
 
 /**
- * 获取分页数据
+ * 获取公司数据
  * @param data - 请求数据
  */
-export function getPartner(data?: unknown): Promise<DefaultOptionType[]> {
-  return new Promise((resolve, reject) => {
-    request.get<IServerResult<IResult[]>>(`${API.URL}`, { params: data }).then(res => {
-      const data: DefaultOptionType[] = []
-
-      res?.data?.data.forEach(item => {
-        data.push({
-          label: item.name,
-          value: item.id
-        })
-      })
-
-      resolve(data)
-    }).catch(() => reject([]))
-  })
+export function getPartner(data?: unknown) {
+  return request.get<ResultData[]>(
+    `${API.URL}`,
+    { params: data }
+  );
 }

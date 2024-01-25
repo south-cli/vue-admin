@@ -1,10 +1,24 @@
-import type { IFormList } from "#/form"
-import type { VxeGridPropTypes } from "vxe-table"
-import { INPUT_REQUIRED } from "@/utils/config"
-import CustomizeInput from "./components/CustomizeInput.vue"
+import type { FormList } from "#/form";
+import type { TableColumnsProps } from "#/public";
+import { FORM_REQUIRED } from "@/utils/config";
+import CustomizeInput from "./components/CustomizeInput.vue";
+
+// 父路径
+export const fatherPath = '/content/article';
+
+// 权限前缀
+const permissionPrefix = '/content/article';
+
+// 权限
+export const pagePermission = {
+  page: `${permissionPrefix}/index`,
+  create: `${permissionPrefix}/create`,
+  update: `${permissionPrefix}/update`,
+  delete: `${permissionPrefix}/delete`
+};
 
 // 搜索数据
-export const searchList: IFormList[] = [
+export const searchList: FormList[] = [
   {
     label: '用户名',
     name: 'username',
@@ -15,59 +29,94 @@ export const searchList: IFormList[] = [
     name: 'title',
     component: 'Input'
   }
-]
+];
 
 // 表格数据
-export const tableColumns: VxeGridPropTypes.Columns = [
+export const tableColumns: TableColumnsProps[] = [
   {
     title: 'ID',
-    field: 'id'
+    dataIndex: 'id'
   },
   {
     title: '用户名',
-    field: 'username',
+    dataIndex: 'username',
   },
   {
     title: '标题',
-    field: 'title'
+    dataIndex: 'title'
   },
   {
     title: '内容',
-    field: 'content'
+    dataIndex: 'content'
   },
   {
     title: '操作',
-    field: 'operate',
-    minWidth: 160,
-    showOverflow: false,
-    slots: { default: 'operate' }
+    dataIndex: 'operate',
+    width: 160,
+    ellipsis: false,
   }
-]
+];
 
 // 新增数据
-export const createList: IFormList[] = [
+export const createList: FormList[] = [
   {
     label: '用户名',
     name: 'username',
-    rules: INPUT_REQUIRED,
-    component: 'Input'
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      maxlength: 32,
+      style: {
+        width: '90%'
+      }
+    }
   },
   {
     label: '嵌套数据',
     name: ['user', 'name', 'test'],
-    rules: INPUT_REQUIRED,
-    component: 'Input'
+    rules: FORM_REQUIRED,
+    component: 'Input',
+    componentProps: {
+      maxlength: 32,
+      style: {
+        width: '90%'
+      }
+    }
   },
   {
     label: '标题',
     name: 'title',
-    rules: INPUT_REQUIRED,
+    rules: FORM_REQUIRED,
     component: 'customize',
-    render: CustomizeInput
+    render: CustomizeInput,
+    componentProps: {
+      maxlength: 32,
+      style: {
+        width: '90%'
+      }
+    }
+  },
+  {
+    label: 'DEMO',
+    name: 'demo',
+    unit: '单位',
+    extra: '我是说明,我是说明.',
+    component: 'Input',
+    componentProps: {
+      maxlength: 32,
+      style: {
+        width: '90%'
+      }
+    }
   },
   {
     label: '内容',
     name: 'content',
-    component: 'Editor'
+    component: 'Editor',
+    componentProps: {
+      style: {
+        width: '90%'
+      }
+    }
   }
-]
+];

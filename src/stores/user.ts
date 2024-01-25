@@ -1,15 +1,15 @@
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 
-interface IUserInfo {
+interface UserDataInfo {
   id: number;
   username: string;
   email: string;
   phone: string;
 }
 
-interface IState {
+interface StateData {
   permissions: string[];
-  userInfo: IUserInfo;
+  userInfo: UserDataInfo;
 }
 
 export const useUserStore = defineStore({
@@ -24,33 +24,33 @@ export const useUserStore = defineStore({
       email: '',
       phone: ''
     }
-  } as IState),
+  } as StateData),
   actions: {
     /**
      * 设置用户权限
      * @param permissions - 权限
      */
     setPermissions(permissions: string[]) {
-      this.permissions = permissions
+      this.permissions = permissions;
     },
     /**
      * 获取用户权限
      */
     getPermissions() {
-      return this.permissions
+      return this.permissions;
     },
     /**
      * 设置用户信息
      * @param userInfo - 用户值
      */
-    setUserInfo(userInfo: IUserInfo) {
-      this.userInfo = userInfo
+    setUserInfo(userInfo: UserDataInfo) {
+      this.userInfo = userInfo;
     },
     /**
      * 获取用户信息
      */
     getUserInfo() {
-      return this.userInfo
+      return this.userInfo;
     },
     /**
      * 清除用户信息
@@ -61,7 +61,7 @@ export const useUserStore = defineStore({
         username: '',
         email: '',
         phone: ''
-      }
+      };
     }
   },
-})
+});

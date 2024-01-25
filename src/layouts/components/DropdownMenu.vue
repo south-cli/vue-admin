@@ -44,37 +44,31 @@
 </template>
 
 <script lang="ts" setup>
-import type { ITabs } from '@/stores/tabs'
-import { PropType } from 'vue'
-import { TabEnums } from '../model'
-import { Menu, MenuItem } from 'ant-design-vue'
+import type { TabsData } from '@/stores/tabs';
+import { TabEnums } from '../model';
+import { Menu, MenuItem } from 'ant-design-vue';
 import {
   RedoOutlined,
   CloseOutlined,
   VerticalAlignTopOutlined,
   VerticalAlignMiddleOutlined
-} from '@ant-design/icons-vue'
+} from '@ant-design/icons-vue';
 
-const emit = defineEmits(['handleDropdown', 'handleRefresh'])
+interface DefineEmits {
+  (e: 'handleDropdown', type: TabEnums, key: string): void;
+  (e: 'handleRefresh'): void;
+}
 
-defineProps({
-  currentKey: {
-    type: String,
-    required: true
-  },
-  activeKey: {
-    type: String,
-    required: true
-  },
-  index: {
-    type: Number,
-    required: true
-  },
-  list: {
-    type: Array as PropType<ITabs[]>,
-    required: true
-  }
-})
+const emit = defineEmits<DefineEmits>();
+
+interface DefineProps {
+  currentKey: string;
+  activeKey: string;
+  index: number;
+  list: TabsData[];
+}
+
+withDefaults(defineProps<DefineProps>(), {});
 
 /**
  * 处理下拉事件
@@ -82,11 +76,11 @@ defineProps({
  * @param key - 唯一值 
  */
 const handleDropdown = (type: TabEnums, key: string) => {
-  emit('handleDropdown', type, key)
-}
+  emit('handleDropdown', type, key);
+};
 
 /** 刷新当前页 */
 const handleRefresh = () => {
-  emit('handleRefresh')
-}
+  emit('handleRefresh');
+};
 </script>

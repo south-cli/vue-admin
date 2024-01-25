@@ -1,8 +1,8 @@
 <template>
-  <Tooltip>
+  <Tooltip placement="bottom">
     <template #title>{{ !isFullscreen ? '全屏' : '退出全屏' }}</template>
     <div
-      class="flex items-center justify-center text-lg mr-3 cursor-pointer"
+      class="flex items-center justify-center text-lg mr-10px cursor-pointer"
       @click="toggle"
     >
       <Icon icon="gridicons-fullscreen-exit" v-if="isFullscreen" />
@@ -15,9 +15,9 @@
 /**
  * @description: 全屏组件
  */
-import { useFullscreen } from '@vueuse/core'
-import { Tooltip } from 'ant-design-vue'
-import Icon from '@/components/Icon/index.vue'
+import { useFullscreen } from '@vueuse/core';
+import { Tooltip } from 'ant-design-vue';
+import { Icon } from '@iconify/vue';
 
-const { isFullscreen, toggle } = useFullscreen()
+const { isFullscreen, toggle } = useFullscreen();
 </script>

@@ -6,8 +6,8 @@
       flex
       items-center
       justify-end
-      px-5
       min-h-40px
+      box-border
       z-999
     "
   >
@@ -17,7 +17,7 @@
       size="small"
       :disabled="isLoading"
       :showTotal="() => showTotal(total)"
-      :defaultCurrent="page"
+      v-model:current="currentPage"
       :defaultPageSize="pageSize"
       :total="total"
       :onChange="onChange"
@@ -26,40 +26,43 @@
 </template>
 
 <script lang="ts" setup>
-import { Pagination } from 'ant-design-vue'
+import { ref, watch } from 'vue';
+import { PAGE_SIZE } from '@/utils/config';
+import { Pagination } from 'ant-design-vue';
 
-const emit = defineEmits(['handleChange'])
+interface DefineEmits {
+  (e: 'handleChange', page: number, pageSize: number): void;
+}
 
-defineProps({
-  total: {
-    type: Number,
-    required: false,
-    default: 0
-  },
-  page: {
-    type: Number,
-    required: true,
-    default: 1
-  },
-  pageSize: {
-    type: Number,
-    required: true,
-    default: 20
-  },
-  isLoading: {
-    type: Boolean,
-    required: false,
-    default: false
-  }
-})
+const emit = defineEmits<DefineEmits>();
+
+interface DefineProps {
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  isLoading?: boolean;
+}
+
+const props = withDefaults(defineProps<DefineProps>(), {
+  isLoading: false,
+  total: 0,
+  page: 1,
+  pageSize: PAGE_SIZE,
+});
+
+const currentPage = ref(props.page);
+
+watch(() => props.page, value => {
+  currentPage.value = value || 1;
+});
 
 /**
  * 显示总数
  * @param total - 总数
  */
 const showTotal = (total: number): string => {
-  return `共 ${total || 0} 条数据`
-}
+  return `共 ${total || 0} 条数据`;
+};
 
 /**
  * 页数改变
@@ -67,31 +70,6 @@ const showTotal = (total: number): string => {
  * @param pageSize - 页总数
  */
 const onChange = (page: number, pageSize: number) => {
-  emit('handleChange', page, pageSize)
-}
+  emit('handleChange', page, pageSize);
+};
 </script>
-
-<style lang="less">
-.ant-pagination-item {
-  background-color: #f4f4f5 !important;
-  margin-right: 7px !important;
-}
-
-.ant-pagination-item-active {
-  background-color: #0960bd!important;
-}
-
-.ant-pagination-item-active a {
-  color: #fff !important;
-}
-
-.ant-pagination-prev {
-  margin-right: 7px !important;
-  background-color: #f4f4f5 !important;
-}
-
-.ant-pagination-next {
-  margin-right: 7px !important;
-  background-color: #f4f4f5 !important;
-}
-</style>

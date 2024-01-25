@@ -1,16 +1,16 @@
 <template>
-  <Tooltip>
+  <Tooltip placement="bottom">
     <template #title>搜索</template>
     <Icon
-      class="flex items-center justify-center text-lg mr-3"
+      class="flex items-center justify-center text-lg mr-10px"
       icon="uil-search"
       @click="toggle"
     />
   </Tooltip>
 
   <SearchModal
-    v-if="isVisible"
-    :isVisible="isVisible"
+    v-if="isOpen"
+    :isOpen="isOpen"
     @toggle="toggle"
   />
 </template>
@@ -19,15 +19,15 @@
 /**
  * @description: 顶部全局搜索菜单组件
  */
-import { ref } from 'vue'
-import { Tooltip } from 'ant-design-vue'
-import SearchModal from './components/SearchModal.vue'
-import Icon from '@/components/Icon/index.vue'
+import { ref } from 'vue';
+import { Tooltip } from 'ant-design-vue';
+import SearchModal from './components/SearchModal.vue';
+import { Icon } from '@iconify/vue';
 
-const isVisible = ref(false)
+const isOpen = ref(false);
 
 /** 切换搜索框显示状态 */
 const toggle = () => {
-  isVisible.value = !isVisible.value
-}
+  isOpen.value = !isOpen.value;
+};
 </script>

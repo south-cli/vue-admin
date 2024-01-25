@@ -1,71 +1,86 @@
-import type { VxeTableProps } from "vxe-table"
-import type { IFormData } from "./form"
+import type { IConstant } from "@/utils/constants";
+import type { FormData } from "./form";
+import type { ColumnType } from "ant-design-vue/es/table";
+import type { DefaultRecordType } from "ant-design-vue/es/vc-table/interface";
 
 // 基础类型
-export type IBasicData = string | number | boolean
+export type BasicData = string | number | boolean
 
 // 数组
-export type IArrayData = string[] | number[] | boolean[]
+export type ArrayData = string[] | number[] | boolean[]
 
 // 对象
-export type IObjectData = object | object[] | Record<string, IBasicData | IArrayData | IEmptyData>
+export type ObjectData = object | object[] | Record<string, BasicData | ArrayData | EmptyData>
 
 // 空值
-export type IEmptyData = null | undefined
+export type EmptyData = null | undefined
 
 // 唯一值
-export type ISymbolData = symbol | symbol[]
-
-// 全部数据类型
-export type IAllDataType = IBasicData | IArrayData | IEmptyData | IObjectData | ISymbolData
+export type SymbolData = symbol | symbol[]
 
 // 侧边菜单值
-export interface ISideMenu {
+export interface SideMenu {
+  id?: string;
+  menuType: number; // 菜单类型
   label: string;
   key: string;
   icon?: string;
   rule?: string; // 路由权限
   nav?: string[]; // 面包屑路径
-  children?: ISideMenu[];
+  children?: SideMenu[];
 }
 
 // 搜索数据
-export interface ISearchData {
-  data: IFormData;
+export interface SearchData {
+  data: FormData;
 }
 
 // 新增数据
-export interface ICreateData {
+export interface CreateData<T = FormData> {
   id: string;
-  isVisible: boolean;
+  isOpen: boolean;
   title: string;
-  data: IFormData;
+  data: T;
+  type?: 'create' | 'update';
 }
 
 // 分页数据
-export interface IPaginationData {
+export interface PaginationData {
+  total?: number;
   page: number;
   pageSize: number;
 }
 
+// 表格参数
+export interface TableColumnsProps extends ColumnType<DefaultRecordType> {
+  type?: 'index';
+  echoArr?: IConstant[];
+  children?: TableColumnsProps[];
+  tooltipKey?: string; // 提示文本键名
+}
+
 // 表格数据
-export type ITableData = {
-  total?: number;
-} & VxeTableProps
+export type TableData = Record<string, unknown>
 
 // 接口响应数据
-export interface IServerResult<T = unknown> {
+export interface ServerResult<T = unknown> {
   code: number;
   message?: string;
   data: T
 }
 
 // 分页表格响应数据
-export interface IPageServerResult<T = unknown> {
-  code: number;
-  message?: string;
-  data: {
-    items: T,
-    total: number
-  }
+export interface PageServerResult<T = unknown[]> {
+  items: T,
+  total: number
 }
+
+// 某个字段变为可选
+export type PartialByKeys<T, K extends keyof T> = {
+	[P in K]?: T[P];
+} & Omit<T, K>
+
+// 某个字段变为必选
+export type RequiredByKeys<T, K extends keyof T> = {
+	[P in K]: T[P];
+} & Omit<T, K>

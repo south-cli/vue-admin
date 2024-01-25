@@ -3,14 +3,14 @@
 使用`Vue3`,`Vite`,`TypeScript`,`Ant Design Vue`等主流技术开发的开箱即用的中后台前端项目，支持`keepalive`功能，`Vite`自动生成路由，`pinia`状态管理，`vxe-table`虚拟滚动表格，`UnoCss`开发样式。
 
 ## 🚀 项目演示
-[演示地址](https://southliu.github.io/)
+[演示地址](https://iamsouth.gitee.io)
 
-## 🐱‍💻 安装使用
+## 💻 安装使用
 
 - 获取项目代码
 
 ```bash
-git clone https://github.com/southliu/vue-vite-admin.git
+git clone https://github.com/southliu/vue-admin.git
 ```
 
 - 选择目录
@@ -100,17 +100,27 @@ git push
 - [x] 弹窗最大化功能
 - [x] Icon封装
 - [x] 标签页右键功能
-- [x] 搜索功能
+- [x] 搜索菜单功能
 
-## 🐱‍🐉 keep-alive说明：
-### 如果需要使用keep-alive功能则需要文件名和菜单对应的name名一致，首字母大写，否则会失效。
+## 🐓 keep-alive说明：
+### 如果需要使用keep-alive功能则需要文件名里面添加name即可。
+```ts
+/**
+ * 需要通过路径转换成对应的name
+ * /system/user => SystemUser
+ * /content/article => ContentArticle
+ */
+defineOptions({
+  name: 'SystemUser'
+});
+```
 
 ## 🐵 关于封装
   1. 功能扩展，在原有的api上拓展。
   2. 功能整合，合并两个或两个以上组件的api。
   3. 样式统一，避免后期样式变动，导致牵一发而动全身。
 
-## 🐱‍🏍 组件说明
+## 🤖 组件说明
 
 ### 表单(BasicForm):
 | 属性名 | 必填 | 属性说明 |
@@ -127,7 +137,6 @@ git push
 | id | 否 | 唯一标识(被某些特定的功能所依赖) |
 | data | 是 | 表格数据 |
 | columns | 是 | 列数据 |
-| options | 否 | 表格API，[参考API](https://vxetable.cn/#/grid/api)
 | isLoading | 否 | 加载动画 |
 | offsetHeight | 否 | 高度偏移差，当表格高度过高出现滚动条的时候使用 |
 | isResize | 否 | 是否开启监听窗口变化而更改高度 |

@@ -1,6 +1,6 @@
 <template>
   <BasicModal
-    :isVisible="isVisible"
+    :isOpen="isOpen"
     title="修改密码"
     :width="450"
     :isLoading="isLoading"
@@ -11,7 +11,6 @@
       ref="formRef"
       :model="formState"
       name="horizontal_login"
-      autocomplete="on"
       :labelCol="{ span: 5 }"
       :wrapper-col="{ span: 19 }"
     >
@@ -23,7 +22,13 @@
           PASSWORD_RULE
         ]"
       >
-        <InputPassword v-model:value="formState.oldPassword" placeholder="请输入" />
+        <InputPassword
+          v-model:value="formState.oldPassword"
+          placeholder="请输入"
+          allowClear
+          autoComplete="current-password"
+          @pressEnter="onFinish"
+        />
       </FormItem>
 
       <FormItem
@@ -36,6 +41,9 @@
       >
         <PasswordStrength
           v-model:value="formState.newPassword"
+          autoComplete="new-password"
+          allowClear
+          @pressEnter="onFinish"
         />
       </FormItem>
 
@@ -47,7 +55,13 @@
           PASSWORD_RULE
         ]"
       >
-        <InputPassword v-model:value="formState.confirmPassword" placeholder="请输入" />
+        <InputPassword
+          v-model:value="formState.confirmPassword"
+          placeholder="请输入"
+          allowClear
+          autoComplete="confirm-password"
+          @pressEnter="onFinish"
+        />
       </FormItem>
     </Form>
   </BasicModal>
@@ -57,46 +71,52 @@
 /**
  * @description: 修改密码组件
  */
-import type { FormInstance } from 'ant-design-vue'
-import { reactive, ref } from 'vue'
-import { Form, FormItem, InputPassword, message } from 'ant-design-vue'
-import { PASSWORD_RULE } from '@/utils/config'
-import { useDebounceFn } from '@vueuse/core'
-import BasicModal from '../Modal/BasicModal.vue'
-import PasswordStrength from '../PasswordStrength/index.vue'
+import type { FormInstance } from 'ant-design-vue';
+import type { FormData } from '#/form';
+import { ref } from 'vue';
+import { Form, FormItem, InputPassword, message } from 'ant-design-vue';
+import { PASSWORD_RULE } from '@/utils/verify';
+import { useDebounceFn } from '@vueuse/core';
+import BasicModal from '../Modal/BasicModal.vue';
+import PasswordStrength from '../PasswordStrength/index.vue';
 
-interface IFormData {
+interface CurrentFormData {
   oldPassword: string,
   newPassword: string,
   confirmPassword: string
 }
 
-const emit = defineEmits(['handleCancel', 'handleSubmit'])
+interface DefineEmits {
+  (e: 'handleCancel'): void;
+  (e: 'handleSubmit', value: FormData): void;
+}
 
-defineProps({
-  isVisible: {
-    type: Boolean,
-    required: true
-  },
-  isLoading: {
-    type: Boolean,
-    required: true
-  }
-})
+const emit = defineEmits<DefineEmits>();
 
-const formRef = ref<FormInstance>()
+interface DefineProps {
+  isLoading?: boolean;
+  isOpen: boolean;
+}
 
-// 表单数据
-const formState = reactive<IFormData>({
+withDefaults(defineProps<DefineProps>(), {
+  isLoading: false,
+});
+
+const formRef = ref<FormInstance>();
+
+const initFormState = {
   oldPassword: '',
   newPassword: '',
   confirmPassword: ''
-})
+};
+
+// 表单数据
+const formState = ref<CurrentFormData>({ ...initFormState });
 
 /** 关闭弹窗 */
 const handleCancel = () => {
-  emit('handleCancel')
-}
+  emit('handleCancel');
+};
 
 /** 点击确认 */
 const onFinish = useDebounceFn(() => {
@@ -105,10 +125,19 @@ const onFinish = useDebounceFn(() => {
     .then(values => {
       // 密码不一致不通过
       if (values.newPassword !== values.confirmPassword) {
-        return message.warning({ content: '重复密码不一致', key: 'password' })
+        return message.warning({ content: '重复密码不一致', key: 'password' });
       }
 
-      emit('handleSubmit', values)
-    })
-})
+      emit('handleSubmit', values);
+    });
+});
+
+/** 重置数据 */
+const handleInit = () => {
+  formState.value = { ...initFormState };
+};
+
+defineExpose({
+  handleInit
+});
 </script>

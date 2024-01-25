@@ -1,18 +1,17 @@
-import type { Plugin } from 'vite'
-import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
-import { presetUno, presetAttributify, presetIcons } from 'unocss'
-import { configStyleImportPlugin } from './styleImport'
-import { configPageImportPlugin } from './pages'
-import { timePlugin } from './time'
-import { imgMinPlugin } from './imgMin'
-import { visualizer } from 'rollup-plugin-visualizer'
-import vue from '@vitejs/plugin-vue'
-import AutoImport from 'unplugin-auto-import/vite'
-import PurgeIcons from 'vite-plugin-purge-icons'
-import Components from 'unplugin-vue-components/vite'
-import Unocss from 'unocss/vite'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import viteCompression from 'vite-plugin-compression'
+import type { Plugin } from 'vite';
+import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers';
+import { presetUno, presetAttributify, presetIcons } from 'unocss';
+import { timePlugin } from './time';
+import { versionUpdatePlugin } from './version';
+import { visualizer } from 'rollup-plugin-visualizer';
+import vue from '@vitejs/plugin-vue';
+import AutoImport from 'unplugin-auto-import/vite';
+import PurgeIcons from 'vite-plugin-purge-icons';
+import Components from 'unplugin-vue-components/vite';
+import Unocss from 'unocss/vite';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import viteCompression from 'vite-plugin-compression';
+import Pages from 'vite-plugin-pages';
 
 export function createVitePlugins() {
   // 插件参数
@@ -42,6 +41,11 @@ export function createVitePlugins() {
         AntDesignVueResolver()
       ]
     }),
+    Pages({
+      exclude: [
+        '**/components/*.vue'
+      ]
+    }),
     // 包分析
     visualizer({
       gzipSize: true,
@@ -49,13 +53,9 @@ export function createVitePlugins() {
     }),
     // 打包时间
     timePlugin(),
-    // 图片压缩
-    imgMinPlugin(),
-    // css按需加载
-    configStyleImportPlugin(),
-    // 自动生成路由
-    configPageImportPlugin()
-  ]
+    // 版本控制
+    versionUpdatePlugin()
+  ];
 
-  return vitePlugins
+  return vitePlugins;
 }

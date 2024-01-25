@@ -1,8 +1,9 @@
-import type { ISideMenu } from '#/public'
-import { defineStore } from 'pinia'
+import type { SideMenu } from '#/public';
+import { defineStore } from 'pinia';
+import { useTabStore } from './tabs';
 
 // 菜单项
-export interface IMenuItem {
+export interface MenuItem {
   key: string;
   path: string;
   top: string;
@@ -12,19 +13,22 @@ export interface IMenuItem {
   icon?: string;
 }
 
-interface IState {
+interface StateData {
   isPhone: boolean;
-  firstMenu: IMenuItem;
+  topMenuKey: string;
+  firstMenu: MenuItem;
   openKeys: string[];
   selectedKeys: string[];
-  menuList: ISideMenu[],
+  menuList: SideMenu[],
+  sideMenuList: SideMenu[],
 }
 
 export const useMenuStore = defineStore({
   id: 'menu',
   state: () => ({
     isPhone: false,
-    firstMenu: {
+    topMenuKey: '',
+    firstMenu: {  
       key: '',
       path: '',
       top: '',
@@ -34,43 +38,62 @@ export const useMenuStore = defineStore({
     },
     openKeys: [],
     selectedKeys: [],
-    menuList: []
-  } as IState),
+    menuList: [],
+    sideMenuList: []
+  } as StateData),
   actions: {
     /**
      * 设置菜单
      * @param menus - 菜单值
      */
-    setMenus(menus: ISideMenu[]) {
-      this.menuList = menus
+    setMenus(menus: SideMenu[]) {
+      this.menuList = menus;
+    },
+    /**
+     * 设置侧边菜单
+     * @param menus - 菜单值
+     */
+    setSideMenu(menus: SideMenu[]) {
+      this.sideMenuList = menus;
+    },
+    /**
+     * 设备顶部菜单选中
+     * @param key - 选中的值
+     */
+    setTopMenuKey(key: string) {
+      this.topMenuKey = key;
+
+      // 标签分割
+      const { cacheTabs, setTabs } = useTabStore();
+      setTabs(cacheTabs?.[key] || []);
     },
     /**
      * 设置是否是手机
      * @param isPhone - 是否是手机打开
      */
     setPhone(isPhone: boolean) {
-      this.isPhone = isPhone
+      this.isPhone = isPhone;
     },
     /**
      * 设置展开值
      * @param arr - 展开值
      */
      setOpenKeys(arr: string[]) {
-      this.openKeys = arr
+      this.openKeys = arr;
     },
     /**
      * 设置选中的值
      * @param arr - 选中的值
      */
      setSelectedKeys(arr: string[]) {
-      this.selectedKeys = arr
+      this.selectedKeys = arr;
     },
     /**
      * 设置第一个菜单
      * @param obj - 菜单值
      */
-    setFirstMenu(obj: IMenuItem) {
-      this.firstMenu = obj
+    setFirstMenu(obj: MenuItem) {
+      this.firstMenu = obj;
     }
   }
-})
+});

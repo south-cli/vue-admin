@@ -26,77 +26,75 @@
  * @param format - 时间格式化
  * @result string[]
  */
-import { Button } from 'ant-design-vue'
-import { DATE_FORMAT } from '@/utils/constants'
-import Icon from '@/components/Icon/index.vue'
-import dayjs from 'dayjs'
+import { Button } from 'ant-design-vue';
+import { DATE_FORMAT } from '@/utils/config';
+import { Icon } from '@iconify/vue';
+import dayjs from 'dayjs';
 
-type IType = 'yesterday' |
+type TypeData = 'yesterday' |
               'tomorrow' |
               'today' |
               'prevMonth' |
               'nextMonth' |
               'month'
 
-interface IList {
+interface ListData {
   title: string;
-  value: IType;
+  value: TypeData;
 }
 
-const emit = defineEmits(['handleResult'])
+interface DefineEmits {
+  (e: 'handleResult', value: string[]): void;
+}
 
-const props = defineProps({
-  date: {
-    type: String,
-    required: true
-  },
-  isLoading: {
-    type: Boolean,
-    required: false,
-    default: false
-  },
-  format: {
-    type: String,
-    required: false,
-    default: DATE_FORMAT
-  }
-})
+const emit = defineEmits<DefineEmits>();
 
-const list: IList[] = [
+interface DefineProps {
+  isLoading?: boolean;
+  date: string;
+  format?: string;
+}
+
+const props = withDefaults(defineProps<DefineProps>(), {
+  isLoading: false,
+  format: DATE_FORMAT
+});
+
+const list: ListData[] = [
   { title: '前一天', value: 'yesterday' },
   { title: '下一天', value: 'tomorrow' },
   { title: '当天', value: 'today' },
   { title: '前一月', value: 'prevMonth' },
   { title: '下一月', value: 'nextMonth' },
   { title: '本月', value: 'month' },
-]
+];
 
 /**
  * 处理点击
  * @param type = 类型 
  */
-const handleClick = (type: IType) => {
-  let result: string[] = []
+const handleClick = (type: TypeData) => {
+  let result: string[] = [];
   switch (type) {
     // 前一天
     case 'yesterday': {
-      const date = dayjs(props.date).subtract(1, 'd').format(props.format)
-      result = [date, date]
-      break
+      const date = dayjs(props.date).subtract(1, 'd').format(props.format);
+      result = [date, date];
+      break;
     }
 
     // 下一天
     case 'tomorrow': {
-      const date = dayjs(props.date).add(1, 'd').format(props.format)
-      result = [date, date]
-      break
+      const date = dayjs(props.date).add(1, 'd').format(props.format);
+      result = [date, date];
+      break;
     }
 
     // 当天
     case 'today': {
-      const date = dayjs().format(props.format)
-      result = [date, date]
-      break
+      const date = dayjs().format(props.format);
+      result = [date, date];
+      break;
     }
 
     // 前一月
@@ -104,13 +102,13 @@ const handleClick = (type: IType) => {
       const start = dayjs(props.date)
                     .subtract(1, 'month')
                     .startOf('month')
-                    .format(props.format)
+                    .format(props.format);
       const end = dayjs(props.date)
                     .subtract(1, 'month')
                     .endOf('month')
-                    .format(props.format)
-      result = [start, end]
-      break
+                    .format(props.format);
+      result = [start, end];
+      break;
     }
 
     // 下一月
@@ -118,26 +116,26 @@ const handleClick = (type: IType) => {
       const start = dayjs(props.date)
                     .add(1, 'month')
                     .startOf('month')
-                    .format(props.format)
+                    .format(props.format);
       const end = dayjs(props.date)
                     .add(1, 'month')
                     .endOf('month')
-                    .format(props.format)
-      result = [start, end]
-      break
+                    .format(props.format);
+      result = [start, end];
+      break;
     }
 
     // 本月
     case 'month': {
-      const start = dayjs().startOf('month').format(props.format)
-      const end = dayjs().endOf('month').format(props.format)
-      result = [start, end]
-      break
+      const start = dayjs().startOf('month').format(props.format);
+      const end = dayjs().endOf('month').format(props.format);
+      result = [start, end];
+      break;
     }
 
     default:
-      break
+      break;
   }
-  emit('handleResult', result)
-}
+  emit('handleResult', result);
+};
 </script>

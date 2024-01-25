@@ -1,13 +1,13 @@
 <template>
   <div class="py-1 box-border transition-all overflow-hidden z-2">
     <div
-      class="flex content-center px-5 py-2 cursor-pointer"
+      class="flex justify-center items-center px-5 py-2 cursor-pointer"
       :class="{ 'justify-center': isCollapsed }"
       @click="onClickLogo"
     >
       <img
         class="object-contain"
-        :width="30"
+        :width="50"
         :height="30"
         :src="Logo"
         alt="LOGO"
@@ -21,8 +21,8 @@
     </div>
     <div class="menu-height overflow-y-auto">
       <Menu
-        v-model:openKeys="currentOpenKeys"
         v-model:selectedKeys="selectedKeys"
+        :openKeys="(!isCollapsed && !isPhone) ? currentOpenKeys : undefined"
         class="h-full z-1000"
         mode="inline"
         theme="dark"
@@ -30,7 +30,7 @@
         @openChange="openChange"
       >
         <MenuChildren
-          :list="menuList"
+          :list="sideMenuList"
           :handleClick="handleClick"
         />
       </Menu>
@@ -45,94 +45,114 @@
 </template>
 
 <script lang="ts" setup>
-import type { Key } from 'ant-design-vue/lib/_util/type'
-import { watch, onMounted, ref } from 'vue'
-import { useMenuStore } from '@/stores/menu'
-import { useUserStore } from '@/stores/user'
-import { useRoute, useRouter } from 'vue-router'
-import { Menu } from 'ant-design-vue'
-import { storeToRefs } from 'pinia'
-import { defaultMenus } from '@/menus'
+import type { SideMenu } from '#/public';
+import type { Key } from 'ant-design-vue/lib/_util/type';
+import { watch, onMounted, ref } from 'vue';
+import { useMenuStore } from '@/stores/menu';
+import { useUserStore } from '@/stores/user';
+import { useRoute, useRouter } from 'vue-router';
+import { Menu } from 'ant-design-vue';
+import { storeToRefs } from 'pinia';
+import { setTitle } from '@/utils/helper';
 import {
-  filterMenus,
   getFirstMenu,
+  getMenuName,
   getOpenMenuByRouter,
   splitPath
-} from '@/menus/utils/helper'
-import MenuChildren from './MenuChildren.vue'
-import Logo from '@/assets/images/logo.png'
+} from '@/utils/menu';
+import MenuChildren from './MenuChildren.vue';
+import Logo from '@/assets/images/logo.png';
 
-const emit = defineEmits(['toggleCollapsed'])
+interface DefineEmits {
+  (e: 'toggleCollapsed'): void;
+}
 
-const props = defineProps({
-  isCollapsed: {
-    type: Boolean,
-    required: true
-  }
-})
+const emit = defineEmits<DefineEmits>();
 
-const route = useRoute()
-const router = useRouter()
-const menuStore = useMenuStore()
-const userStore = useUserStore()
-const { permissions } = storeToRefs(userStore)
+interface DefineProps {
+  isCollapsed: boolean;
+}
+
+const props = withDefaults(defineProps<DefineProps>(), {});
+
+const route = useRoute();
+const router = useRouter();
+const menuStore = useMenuStore();
+const userStore = useUserStore();
+const { permissions } = storeToRefs(userStore);
 const {
   isPhone,
   openKeys,
   selectedKeys,
-  menuList
-} = storeToRefs(menuStore)
+  sideMenuList
+} = storeToRefs(menuStore);
 const {
-  setMenus,
   setOpenKeys,
   setSelectedKeys
-} = menuStore
+} = menuStore;
 
 // 当前展开项，收缩模式不展开
-const currentOpenKeys = ref(openKeys.value)
+const currentOpenKeys = ref(openKeys.value);
 
 onMounted(() => {
-  if (permissions.value.length > 0) {
-    // 创建菜单
-    const newMenus = filterMenus(defaultMenus, permissions.value)
-    setMenus(newMenus || [])
-  
-    // 展开菜单
-    const newOpenKey = getOpenMenuByRouter(route.path)
-    setOpenKeys(newOpenKey)
-    setSelectedKeys([route.path])
-  }
-})
+  handleMenuOpen();
+  handleSetTitle(sideMenuList.value, route.path);
+});
+
+watch(() => sideMenuList.value, () => {
+  handleMenuOpen();
+  handleSetTitle(sideMenuList.value, route.path);
+});
 
 // 监听路径
 watch(() => route.path, value => {
-  const newOpenKey = getOpenMenuByRouter(value)
-  setOpenKeys(newOpenKey)
-  setSelectedKeys([value])
-})
+  if (!value || value === '/loading') return;
+  handleMenuOpen();
+  handleSetTitle(sideMenuList.value, value);
+});
 
 // 监听展开
-watch(() => openKeys, openKeys => {
+watch(() => openKeys.value, openKeys => {
   if (props.isCollapsed || isPhone.value) {
-    currentOpenKeys.value = []
+    currentOpenKeys.value = [];
   } else {
-    currentOpenKeys.value = openKeys.value
+    currentOpenKeys.value = openKeys;
   }
-})
+});
+
+/** 处理菜单展开 */
+const handleMenuOpen = () => {
+  if (permissions.value.length > 0 && sideMenuList.value?.length) {
+    // 展开菜单
+    const newOpenKey = getOpenMenuByRouter(route.path);
+    setOpenKeys(newOpenKey);
+    setSelectedKeys([route.path]);
+  }
+};
+
+/**
+ * 设置浏览器标签
+ * @param list - 菜单列表
+ * @param path - 路径
+ */
+const handleSetTitle = (list: SideMenu[], path: string) => {
+  const title = getMenuName(list, path);
+  if (title) setTitle(title);
+};
 
 /**
  * 处理跳转
  * @param path - 路径
  */
 const goPath = (path: string) => {
-  router.push(path)
-}
+  router.push(path);
+};
 
 /** 点击logo */
 const onClickLogo = () => {
-  const firstMenu = getFirstMenu(defaultMenus, permissions.value)
-  goPath(firstMenu)
-}
+  const firstMenu = getFirstMenu(sideMenuList.value, permissions.value);
+  goPath(firstMenu || '/');
+};
 
 /**
  * 对比当前展开目录是否是同一层级
@@ -140,58 +160,58 @@ const onClickLogo = () => {
  * @param lastArr - 最后展开的目录
  */
 const diffOpenMenu = (arr: string[], lastArr: string[]) => {
-  let result = true
+  let result = true;
 
   for (let j = 0; j < arr.length; j++) {
     if (arr[j] !== lastArr[j]) {
-      result = false
-      break
+      result = false;
+      break;
     }
   }
 
-  return result
-}
+  return result;
+};
 
 /**
  * 菜单展开事件
  * @param openKeys - 展开下标
  */
 const openChange = (openKeys: Key[]) => {
-  const newOpenKey: string[] = []
-  let last = '' // 最后一个目录结构
+  const newOpenKey: string[] = [];
+  let last = ''; // 最后一个目录结构
 
   // 当目录有展开值
   if (openKeys.length > 0) {
-    last = openKeys[openKeys.length - 1].toString()
-    const lastArr: string[] = splitPath(last)
-    newOpenKey.push(last)
+    last = openKeys[openKeys.length - 1].toString();
+    const lastArr: string[] = splitPath(last);
+    newOpenKey.push(last);
 
     // 对比当前展开目录是否是同一层级
     for (let i = openKeys.length - 2; i >= 0; i--) {
-      const arr = splitPath(openKeys[i].toString())
-      const hasOpenKey = diffOpenMenu(arr, lastArr)
-      if (hasOpenKey) newOpenKey.unshift(openKeys[i].toString())
+      const arr = splitPath(openKeys[i].toString());
+      const hasOpenKey = diffOpenMenu(arr, lastArr);
+      if (hasOpenKey) newOpenKey.unshift(openKeys[i].toString());
     }
   }
 
-  setOpenKeys(newOpenKey)
-}
+  setOpenKeys(newOpenKey);
+};
 
 /**
  * 点击菜单
  * @param key - 唯一值
  */
 const handleClick = (key: string) => {
-  goPath(key)
+  goPath(key);
   
   // 手机端点击隐藏菜单
-  if (isPhone.value) emit('toggleCollapsed')
-}
+  if (isPhone.value) emit('toggleCollapsed');
+};
 
 /** 隐藏菜单 */
 const hiddenMenu = () => {
-  emit('toggleCollapsed')
-}
+  emit('toggleCollapsed');
+};
 </script>
 
 <style lang="less" scoped>
@@ -204,4 +224,4 @@ const hiddenMenu = () => {
 .cover {
   left: @layoutLeft;
 }
-</style>
+</style>@/menus/utils/menu

@@ -1,19 +1,21 @@
 <template>
   <Modal
-    :visible="isVisible"
+    :open="isOpen"
     :width="isFullscreen ? '100%' : width"
     :layout="layout"
-    :mask-closable="false"
+    :maskClosable="false"
     :loading="isLoading"
+    v-bind="attrs"
     :wrapClassName="isFullscreen ? 'full-modal' : ''"
+    @cancel="onCancel"
   >
     <template #closeIcon>
-      <div class="mt-7px">
+      <div class="">
         <div class="h-full flex items-center justify-center :hover:text-white text-#000">
           <Tooltip
-            class="p-10px font-16px text-#00000073 hover:text-#404040"
+            class="min-w-30px p-5px font-16px text-#00000073 hover:text-#404040"
             placement="bottom"
-            @click="onFullscreen"
+            @click.stop="onFullscreen"
           >
             <template #title>
               <span>{{ isFullscreen ? '退出最大化' : '最大化' }}</span>
@@ -31,14 +33,14 @@
           </Tooltip>
 
           <Tooltip
-            class="p-10px font-16px text-#00000073 hover:text-#404040"
+            class="min-w-30px p-5px font-16px text-#00000073 hover:text-#404040"
             placement="bottom"
             @click="onCancel"
           >
             <template #title>
               <span>关闭</span>
             </template>
-            <Icon class="text-lg" icon="ant-design:close-outlined" />
+            <Icon class="text-27px mb-5px" icon="ant-design:close-outlined" />
           </Tooltip>
         </div>
       </div>
@@ -51,7 +53,9 @@
     </template>
 
     <Spin :spinning="isLoading">
-      <slot></slot>
+      <div class="pt-20px">
+        <slot></slot>
+      </div>
     </Spin>
 
     <template #footer>
@@ -69,78 +73,69 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, PropType, ref, watch } from 'vue'
-import { Modal, Tooltip, Button, Spin } from 'ant-design-vue'
-import { useModalDragMove } from './hooks/useModalDrag'
-import { useDebounceFn } from '@vueuse/core'
-import Icon from '../Icon/index.vue'
+import type { ModalProps } from 'ant-design-vue';
+import { nextTick, ref, watch, useAttrs } from 'vue';
+import { Modal, Tooltip, Button, Spin } from 'ant-design-vue';
+import { useModalDragMove } from './hooks/useModalDrag';
+import { useDebounceFn } from '@vueuse/core';
+import { Icon } from '@iconify/vue';
 
-const emit = defineEmits(['handleCancel', 'handleFinish'])
+interface DefineEmits {
+  (e: 'handleCancel'): void;
+  (e: 'handleFinish'): void;
+}
 
-const props = defineProps({
-  isVisible: {
-    type: Boolean,
-    required: true
-  },
-  width: {
-    type: [String, Number],
-    default: 520
-  },
-  layout: {
-    type: String as PropType<'horizontal'|'vertical'|'inline'>,
-    required: false,
-    default: 'horizontal'
-  },
-  title: {
-    type: String,
-    required: true
-  },
-  // 权限控制
-  isPermission: {
-    type: Boolean,
-    default: true
-  },
-  isLoading: {
-    type: Boolean,
-    required: false,
-    default: false
-  }
-})
+const emit = defineEmits<DefineEmits>();
+
+interface DefineProps {
+  isOpen: boolean;
+  width?: string | number;
+  modelStyle?: string;
+  layout?: 'horizontal'|'vertical'|'inline';
+  title: string;
+  isPermission?: boolean; // 权限控制
+  isLoading?: boolean;
+}
+
+const props = withDefaults(defineProps<DefineProps>(), {
+  isLoading: false,
+  isPermission: true,
+  width: 520,
+  layout: 'horizontal'
+});
+
+const attrs: ModalProps = useAttrs();
 
 // 是否最大化
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 
 /** 点击关闭 */
 const onCancel = () => {
-  emit('handleCancel')
-}
+  emit('handleCancel');
+};
 
 /** 点击确认 */
 const onFinish = useDebounceFn(() => {
-  emit('handleFinish')
-}, 500)
+  emit('handleFinish');
+}, 500);
 
 /** 最大化 */
 const onFullscreen = () => {
-  isFullscreen.value = !isFullscreen.value
-}
+  isFullscreen.value = !isFullscreen.value;
+};
 
 // 监听显示开启拖拽
-watch(() => props.isVisible, async (value) => {
+watch(() => props.isOpen, async (value) => {
   if (value) {
-    await nextTick()
-    useModalDragMove()
+    await nextTick();
+    useModalDragMove();
   } else {
-    isFullscreen.value = false
+    isFullscreen.value = false;
   }
-})
+});
 </script>
 
 <style lang="less">
-.ant-modal-close-x {
-  width: 100px !important;
-}
-
 .full-modal {
   .ant-modal {
     position: absolute;

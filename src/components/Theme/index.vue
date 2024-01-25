@@ -1,7 +1,7 @@
 <template>
-  <Tooltip>
+  <Tooltip placement="bottom">
     <template #title>主题模式</template>
-    <div class="flex items-center justify-center text-lg mr-4 cursor-pointer">
+    <div class="flex items-center justify-center text-lg mr-15px cursor-pointer">
       <Icon
         v-if="theme === 'light'"
         icon="mdi-white-balance-sunny"
@@ -17,37 +17,37 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
-import { Tooltip } from 'ant-design-vue'
-import Icon from '@/components/Icon/index.vue'
+import { onMounted, ref } from 'vue';
+import { Tooltip } from 'ant-design-vue';
+import { Icon } from '@iconify/vue';
 
-type IType = 'dark' | 'light'
+type TypeData = 'dark' | 'light'
 
-const key = 'theme'
-const themeCache = (localStorage.getItem(key) || 'light') as IType
-const theme = ref<IType>(themeCache)
+const key = 'theme';
+const themeCache = (localStorage.getItem(key) || 'light') as TypeData;
+const theme = ref<TypeData>(themeCache);
 
 onMounted(() => {
   if (!themeCache) {
-    localStorage.setItem(key, 'light')
+    localStorage.setItem(key, 'light');
   }
   if (themeCache === 'dark') {
-    document.body.className = 'theme-dark'
+    document.body.className = 'theme-dark';
   }
-})
+});
 
-const onChange = (type: IType) => {
-  localStorage.setItem(key, type)
-  theme.value = type
+const onChange = (type: TypeData) => {
+  localStorage.setItem(key, type);
+  theme.value = type;
 
   switch (type) {
     case 'dark':
-      document.body.className = 'theme-dark'
-      break
+      document.body.className = 'theme-dark';
+      break;
 
     default:
-      document.body.className = 'theme-primary'
-      break
+      document.body.className = 'theme-primary';
+      break;
   }
-}
+};
 </script>
